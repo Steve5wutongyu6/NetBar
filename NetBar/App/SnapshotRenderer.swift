@@ -14,6 +14,8 @@ enum SnapshotRenderer {
     enum Failure: Error {
         case fixtureUnreadable(URL)
         case encodingFailed(URL)
+        /// The view hierarchy produced no bitmap at all.
+        case renderingFailed
     }
 
     /// Renders the panel for `fixture` and writes a PNG to `destination`.
@@ -23,7 +25,7 @@ enum SnapshotRenderer {
         store.loadFixtureSynchronously()
         guard !store.output.items.isEmpty else { throw Failure.fixtureUnreadable(fixture) }
 
-        let image = image(for: store)
+        let image = try image(for: store)
         guard let data = image.representation(using: .png, properties: [:]) else {
             throw Failure.encodingFailed(destination)
         }
@@ -32,7 +34,7 @@ enum SnapshotRenderer {
 
     /// The rendered panel as an `NSBitmapImageRep`.
     @MainActor
-    static func image(for store: WiFiStore) -> NSBitmapImageRep {
+    static func image(for store: WiFiStore) throws -> NSBitmapImageRep {
         let canvas = SnapshotCanvas(frame: NSRect(x: 0, y: 0, width: MenuMetrics.width, height: 240))
         // A fixed appearance keeps the artifact comparable across runs.
         canvas.appearance = NSAppearance(named: .aqua)
@@ -46,8 +48,9 @@ enum SnapshotRenderer {
         canvas.frame = NSRect(origin: .zero, size: size)
         canvas.layoutSubtreeIfNeeded()
 
-        guard let rep = canvas.bitmapImageRepForCachingDisplay(in: canvas.bounds) else {
-            return NSBitmapImageRep()
+        guard let rep = canvas.bitmapImageRepForCachingDisplay(in: canvas.bounds),
+              rep.pixelsWide > 0, rep.pixelsHigh > 0 else {
+            throw Failure.renderingFailed
         }
         canvas.cacheDisplay(in: canvas.bounds, to: rep)
         return rep
