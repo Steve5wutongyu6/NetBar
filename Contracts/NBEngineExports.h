@@ -20,6 +20,9 @@ extern "C" {
 const char *netbar_node_json(const char *input_json);
 
 /// Human readable version of the engine, for diagnostics.
+///
+/// The pointer refers to a string constant inside the engine: it stays valid for
+/// the life of the process and must NOT be passed to `netbar_string_free`.
 const char *netbar_engine_version(void);
 
 /// Releases a buffer returned by the engine.
