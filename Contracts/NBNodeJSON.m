@@ -62,9 +62,11 @@ static NSString *const NBKeyBattery = @"battery";
 static NSString *const NBKeyStrength = @"strength";
 static NSString *const NBKeyRedacted = @"redacted";
 
+/// Integers come from JSON numbers only: a string that looks like a number is
+/// not one on the wire, and silently converting it would hide a producer bug.
 static NSInteger NBInteger(id value)
 {
-    return [value respondsToSelector:@selector(integerValue)] ? [value integerValue] : 0;
+    return [value isKindOfClass:NSNumber.class] ? [value integerValue] : 0;
 }
 
 static NSString *NBString(id value)
@@ -96,6 +98,24 @@ static NSData *NBJSONData(id object)
     return copy;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (![object isKindOfClass:NBHotspotPeerInfo.class]) {
+        return NO;
+    }
+    NBHotspotPeerInfo *other = object;
+    return [self.name isEqualToString:other.name]
+        && self.batteryPercent == other.batteryPercent
+        && self.signalBars == other.signalBars
+        && (self.networkLabel == other.networkLabel
+            || [self.networkLabel isEqualToString:other.networkLabel]);
+}
+
+- (NSUInteger)hash
+{
+    return self.name.hash ^ (NSUInteger)self.batteryPercent ^ ((NSUInteger)self.signalBars << 8);
+}
+
 - (NSDictionary *)jsonObject
 {
     return @{
@@ -125,6 +145,31 @@ static NSData *NBJSONData(id object)
     copy.hotspotNetwork = self.hotspotNetwork;
     copy.hotspotBattery = self.hotspotBattery;
     return copy;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (![object isKindOfClass:NBEngineNetwork.class]) {
+        return NO;
+    }
+    NBEngineNetwork *other = object;
+    return ((self.ssid == other.ssid) || [self.ssid isEqualToString:other.ssid])
+        && ((self.serviceName == other.serviceName)
+            || [self.serviceName isEqualToString:other.serviceName])
+        && ((self.bssid == other.bssid) || [self.bssid isEqualToString:other.bssid])
+        && self.rssi == other.rssi
+        && self.security == other.security
+        && self.phyMode == other.phyMode
+        && self.channel == other.channel
+        && self.known == other.known
+        && self.personalHotspot == other.personalHotspot
+        && self.hotspotNetwork == other.hotspotNetwork
+        && self.hotspotBattery == other.hotspotBattery;
+}
+
+- (NSUInteger)hash
+{
+    return (self.ssid.hash ?: 0) ^ (NSUInteger)self.rssi ^ ((NSUInteger)self.channel << 16);
 }
 
 - (NSDictionary *)jsonObject
