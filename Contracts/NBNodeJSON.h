@@ -70,6 +70,13 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 /// YES once the user unfolds "Other Networks": the engine then returns every
 /// remaining network instead of the two it shows by default.
 @property (nonatomic) BOOL revealOther;
+/// What the radio says about the network it is joined to. These survive even
+/// when the scan record for it cannot be identified, which is the normal case
+/// while macOS withholds names.
+@property (nonatomic) BOOL currentIsPersonalHotspot;
+@property (nonatomic) NBHotspotNetwork currentHotspotNetwork;
+@property (nonatomic) NSInteger currentHotspotBattery;
+@property (nonatomic) NSInteger currentStrength;
 @property (nonatomic, copy) NSArray<NBEngineNetwork *> *networks;
 
 /// Wire representation consumed by `netbar_node_json`.

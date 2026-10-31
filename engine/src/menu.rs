@@ -80,7 +80,10 @@ pub fn build(input: &Input) -> Output {
         .current_ssid
         .as_deref()
         .and_then(|ssid| find_record(&collapsed, ssid));
-    let joined_is_hotspot = joined_record.is_some_and(|record| record.personal_hotspot);
+    // The scan record is the primary evidence; the radio's own verdict covers the
+    // case where that record could not be identified (names withheld).
+    let joined_is_hotspot = joined_record.is_some_and(|record| record.personal_hotspot)
+        || input.current_is_personal_hotspot;
     output.connected_is_hotspot = joined_is_hotspot;
     output.connected_name = if input.connected_name_redacted {
         None
@@ -92,17 +95,51 @@ pub fn build(input: &Input) -> Output {
     } else {
         joined_record.map_or(0, |record| record.rssi)
     });
-    if let Some(record) = joined_record {
+    if let Some(record) = joined_record.filter(|record| record.personal_hotspot) {
         output.connected_cell = Cell::from_i64(record.hotspot_network);
         output.connected_battery = record.hotspot_battery;
+    } else if joined_is_hotspot {
+        output.connected_cell = Cell::from_i64(input.current_hotspot_network);
+        output.connected_battery = input.current_hotspot_battery;
     }
 
     // Rule E.1: Personal Hotspots get their own section, whether or not they are
     // saved, and always keep their Cellular/Battery detail.
-    let mut hotspots: Vec<&Network> = collapsed
+    // Owned clones: the joined hotspot may need a row synthesised below, and a
+    // borrowed list could not take one without leaking it.
+    let mut hotspots: Vec<Network> = collapsed
         .iter()
         .filter(|network| network.personal_hotspot)
+        .cloned()
         .collect();
+    // A hotspot can be the joined network while no scan record carries its
+    // marker — names withheld, or the access point left the scan. The radio's own
+    // verdict still puts it in the section, so it is never missing from the menu.
+    let joined_hotspot_row_missing = joined_is_hotspot
+        && !hotspots
+            .iter()
+            .any(|network| match (&network.ssid, &input.current_ssid) {
+                (_, None) => true,
+                (Some(ssid), Some(current)) => normalize_name(ssid) == normalize_name(current),
+                (None, Some(_)) => false,
+            });
+    if joined_hotspot_row_missing {
+        let mut synthetic = Network {
+            ssid: input.current_ssid.clone(),
+            bssid: None,
+            service_name: None,
+            rssi: input.current_rssi,
+            known: true,
+            personal_hotspot: true,
+            hotspot_network: input.current_hotspot_network,
+            hotspot_battery: input.current_hotspot_battery,
+            security: 0,
+        };
+        if synthetic.hotspot_network == 0 {
+            synthetic.hotspot_network = output.connected_cell as i64;
+        }
+        hotspots.push(synthetic);
+    }
     sort_by_signal(&mut hotspots);
     if !hotspots.is_empty() {
         output.items.push(Item::header(
@@ -110,7 +147,7 @@ pub fn build(input: &Input) -> Output {
             "header.hotspot",
             "Personal Hotspot",
         ));
-        for (index, network) in hotspots.into_iter().enumerate() {
+        for (index, network) in hotspots.iter().enumerate() {
             // A hotspot whose name macOS withheld still earns a row: the beacon
             // says what it is, and the detail columns carry signal, Cellular and
             // battery, which is exactly what the section is for.
@@ -343,8 +380,9 @@ impl Network {
 
 /// Strongest first, then by name so equally strong networks never swap places
 /// between refreshes.
-fn sort_by_signal(networks: &mut Vec<&Network>) {
+fn sort_by_signal<T: std::borrow::Borrow<Network>>(networks: &mut [T]) {
     networks.sort_by(|left, right| {
+        let (left, right) = (left.borrow(), right.borrow());
         right
             .rssi
             .cmp(&left.rssi)

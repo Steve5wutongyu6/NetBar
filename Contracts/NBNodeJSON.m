@@ -17,6 +17,9 @@ static NSString *const NBKeyInterfaceName = @"interfaceName";
 static NSString *const NBKeyCurrentRSSI = @"currentRSSI";
 static NSString *const NBKeyScanning = @"scanning";
 static NSString *const NBKeyRevealOther = @"revealOther";
+static NSString *const NBKeyCurrentIsPersonalHotspot = @"currentIsPersonalHotspot";
+static NSString *const NBKeyCurrentHotspotNetwork = @"currentHotspotNetwork";
+static NSString *const NBKeyCurrentHotspotBattery = @"currentHotspotBattery";
 static NSString *const NBKeyNetworks = @"networks";
 
 static NSString *const NBKeyPreferredNetworks = @"preferredNetworks";
@@ -138,6 +141,9 @@ static NSData *NBJSONData(id object)
     copy.currentRSSI = self.currentRSSI;
     copy.scanning = self.scanning;
     copy.revealOther = self.revealOther;
+    copy.currentIsPersonalHotspot = self.currentIsPersonalHotspot;
+    copy.currentHotspotNetwork = self.currentHotspotNetwork;
+    copy.currentHotspotBattery = self.currentHotspotBattery;
     copy.networks = self.networks;
     return copy;
 }
@@ -158,6 +164,9 @@ static NSData *NBJSONData(id object)
         NBKeyCurrentRSSI: @(self.currentRSSI),
         NBKeyScanning: @(self.scanning),
         NBKeyRevealOther: @(self.revealOther),
+        NBKeyCurrentIsPersonalHotspot: @(self.currentIsPersonalHotspot),
+        NBKeyCurrentHotspotNetwork: @(self.currentHotspotNetwork),
+        NBKeyCurrentHotspotBattery: @(self.currentHotspotBattery),
         NBKeyNetworks: networks,
     };
     return [NSJSONSerialization isValidJSONObject:object] ? NBJSONData(object) : nil;

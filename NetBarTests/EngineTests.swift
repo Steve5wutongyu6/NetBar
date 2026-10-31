@@ -104,6 +104,36 @@ func lockedNetworkKeepsLock() throws {
 }
 
 @MainActor
+@Test("A capture carries what the radio knows about the joined hotspot")
+func snapshotCarriesConnectedHotspotFacts() throws {
+    let snapshot = NBSnapshot()
+    snapshot.powerOn = true
+    snapshot.interfaceName = "en0"
+    snapshot.currentRSSI = -55
+    snapshot.currentSSID = "Phone"
+    snapshot.currentIsPersonalHotspot = true
+    snapshot.currentIsApplePersonalHotspot = true
+    snapshot.currentHotspotNetwork = .network5G
+    snapshot.currentHotspotBattery = 73
+    snapshot.networks = []
+
+    let input = WiFiStore.input(from: snapshot, preferred: [])
+    #expect(input.currentIsPersonalHotspot)
+    #expect(input.currentHotspotNetwork == .network5G)
+    #expect(input.currentHotspotBattery == 73)
+
+    // The engine turns those into a hotspot row even though the scan is empty.
+    let output = EngineBridge.render(input)
+    #expect(output.connectedIsHotspot)
+    #expect(output.connectedCell == .fiveG)
+    #expect(output.connectedBattery == 73)
+    let hotspot = output.items.filter { $0.section == .hotspot && $0.role == .network }
+    #expect(hotspot.count == 1)
+    #expect(hotspot.first?.isJoined == true)
+    #expect(hotspot.first?.detailKind == .appleHotspot)
+}
+
+@MainActor
 @Test("A capture whose names macOS withheld still lists the joined network")
 func redactedFixtureKeepsJoinedSlot() throws {
     let output = store(fixture("redacted.json")).output

@@ -229,6 +229,11 @@ final class WiFiStore {
         // macOS hides the name of the joined network whenever it withholds every
         // other name, so a healthy signal with no name means "hidden", not "idle".
         input.connectedNameRedacted = snapshot.currentSSID == nil && snapshot.currentRSSI != 0
+        // The radio knows more about the joined network than a name-matched scan
+        // record does, and it keeps working while macOS withholds names.
+        input.currentIsPersonalHotspot = snapshot.currentIsPersonalHotspot
+        input.currentHotspotNetwork = snapshot.currentHotspotNetwork
+        input.currentHotspotBattery = snapshot.currentHotspotBattery
         input.networks = snapshot.networks.map { scanned in
             let network = NBEngineNetwork()
             network.ssid = scanned.ssid

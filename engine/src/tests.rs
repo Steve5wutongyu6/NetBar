@@ -150,6 +150,54 @@ fn personal_hotspot_gets_its_own_section() {
     assert_eq!(hotspot[0].strength, 4);
 }
 
+// A joined hotspot whose scan record carries no marker still gets its row, with
+// the radio's own Cellular and battery readings.
+#[test]
+fn joined_hotspot_is_listed_without_a_flagged_scan_record() {
+    let text = request(true, Some("Phone"), &network("Phone", -58, "")).replace(
+        "\"revealOther\":false",
+        "\"revealOther\":false,\"currentIsPersonalHotspot\":true,\
+\"currentHotspotNetwork\":2,\"currentHotspotBattery\":66",
+    );
+    let output = render(&text);
+    assert!(output.connected_is_hotspot);
+    assert_eq!(output.connected_cell, Cell::FiveG);
+    assert_eq!(output.connected_battery, 66);
+
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    assert_eq!(hotspot[0].ssid.as_deref(), Some("Phone"));
+    assert!(hotspot[0].is_joined);
+    assert_eq!(hotspot[0].detail_kind, DetailKind::AppleHotspot);
+    assert_eq!(hotspot[0].cell, Cell::FiveG);
+    assert_eq!(hotspot[0].battery, 66);
+    // Still no duplicate row in Known.
+    assert!(rows(&output, Section::Known).is_empty());
+}
+
+// With the name withheld, the radio's verdict names the row "Not Nearby" and it
+// is still the joined one.
+#[test]
+fn joined_hotspot_with_a_hidden_name_is_still_joined() {
+    let text = request(true, None, &network("Cafe", -58, ""))
+        .replace(
+            "\"connectedNameRedacted\":false",
+            "\"connectedNameRedacted\":true",
+        )
+        .replace("\"currentRSSI\":-50", "\"currentRSSI\":-54")
+        .replace(
+            "\"revealOther\":false",
+            "\"revealOther\":false,\"currentIsPersonalHotspot\":true,\"currentHotspotNetwork\":2",
+        );
+    let output = render(&text);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    assert_eq!(hotspot[0].title.as_deref(), Some("Not Nearby"));
+    assert!(hotspot[0].redacted);
+    assert_eq!(hotspot[0].cell, Cell::FiveG);
+    assert!(output.connected_is_hotspot);
+}
+
 // Rule E.1: the header only exists when a hotspot does.
 #[test]
 fn hotspot_header_is_absent_without_a_hotspot() {

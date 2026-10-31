@@ -229,8 +229,10 @@ private struct NetworkRow: View {
             .frame(height: MenuMetrics.rowHeight)
             .contentShape(Rectangle())
         }
+        // Not `.disabled`: SwiftUI dims a disabled button, and the joined network
+        // is the most important row in the menu. It stays interactive-looking and
+        // the action simply does nothing.
         .buttonStyle(.plain)
-        .disabled(!isActionable)
         .padding(.horizontal, MenuMetrics.innerPadding)
         .rowHover(isEnabled: isActionable)
     }

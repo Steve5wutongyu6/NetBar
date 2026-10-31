@@ -41,6 +41,10 @@ pub struct Input {
     pub preferred_networks: Vec<String>,
     /// Show every remaining network instead of the folded default.
     pub reveal_other: bool,
+    /// What the radio reports about the joined network, independent of the scan.
+    pub current_is_personal_hotspot: bool,
+    pub current_hotspot_network: i64,
+    pub current_hotspot_battery: i64,
     pub networks: Vec<Network>,
 }
 
@@ -56,6 +60,9 @@ impl Default for Input {
             scanning: false,
             preferred_networks: Vec::new(),
             reveal_other: false,
+            current_is_personal_hotspot: false,
+            current_hotspot_network: 0,
+            current_hotspot_battery: 0,
             networks: Vec::new(),
         }
     }
@@ -83,6 +90,9 @@ impl Input {
                 None => Vec::new(),
             },
             reveal_other: bool_field(value, "revealOther"),
+            current_is_personal_hotspot: bool_field(value, "currentIsPersonalHotspot"),
+            current_hotspot_network: int_field(value, "currentHotspotNetwork"),
+            current_hotspot_battery: int_field(value, "currentHotspotBattery"),
             networks: match value.get("networks").and_then(Value::as_array) {
                 Some(entries) => entries.iter().map(Network::decode).collect(),
                 None => Vec::new(),
