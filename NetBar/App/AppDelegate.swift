@@ -55,9 +55,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate {
     /// YES when the process is a test host rather than the running app.
+    /// Whether this process is a test host. Checked before the app starts its
+    /// status item or asks for Location: a test run must not prompt for
+    /// privacy, and it must not hang waiting for an answer.
     static var isRunningTests: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || NSClassFromString("XCTestCase") != nil
+        let environment = ProcessInfo.processInfo.environment
+        if environment["XCTestConfigurationFilePath"] != nil {
+            return true
+        }
+        if environment.keys.contains(where: { $0.hasPrefix("XCTest") || $0.hasPrefix("XCInject") }) {
+            return true
+        }
+        if let injected = environment["DYLD_INSERT_LIBRARIES"], injected.contains(".xctest") {
+            return true
+        }
+        if CommandLine.arguments.contains(where: { $0.hasPrefix("-XCTest") || $0.contains(".xctest") }) {
+            return true
+        }
+        if NSClassFromString("XCTestCase") != nil {
+            return true
+        }
+        return Bundle.allBundles.contains { $0.bundlePath.hasSuffix(".xctest") }
     }
 }
 
