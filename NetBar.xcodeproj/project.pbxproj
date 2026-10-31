@@ -18,6 +18,7 @@
 		E1CCF4EA29BEFD7D8AA99510 /* NBWiFiBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */; };
 		3F44490F226C4F7C418A08B5 /* NBWiFiHotspot.m in Sources */ = {isa = PBXBuildFile; fileRef = 9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */; };
 		66292D1E0A29377E7485310A /* NBWiFiModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */; };
+		C17996884F532F9599DEC0CB /* NBLocationAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = F3BA82737340DBD6C6B04C04 /* NBLocationAuthorizer.m */; };
 		2BB0A9234B33AA0EBEA28C2F /* NBNodeJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 6271CCAF8DFAB0FAA7056155 /* NBNodeJSON.m */; };
 		997EE92F8765E56206DF172A /* EngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA52C21F8595F38CC861F4AF /* EngineTests.swift */; };
 		C5584690FA0842156CF0199B /* HotspotDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E73E1622645477AFB7F8811 /* HotspotDecodingTests.swift */; };
@@ -49,11 +50,13 @@
 		6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiBridge.m; sourceTree = "<group>"; };
 		9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiHotspot.m; sourceTree = "<group>"; };
 		23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiModels.m; sourceTree = "<group>"; };
+		F3BA82737340DBD6C6B04C04 /* NBLocationAuthorizer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBLocationAuthorizer.m; sourceTree = "<group>"; };
 		6271CCAF8DFAB0FAA7056155 /* NBNodeJSON.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBNodeJSON.m; sourceTree = "<group>"; };
 		2D5BE0E4E3BFF659C18E1682 /* NetBar-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetBar-Bridging-Header.h; sourceTree = "<group>"; };
 		A975637496F0B68519C55BD8 /* NBWiFiBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiBridge.h; sourceTree = "<group>"; };
 		CF11E2AEB83E64A6CF7059EF /* NBWiFiHotspot.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiHotspot.h; sourceTree = "<group>"; };
 		44B0D24B19FB2DD78BFCF32B /* NBWiFiModels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiModels.h; sourceTree = "<group>"; };
+		B2B9FCBDAFF9B0FB0A6736AA /* NBLocationAuthorizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBLocationAuthorizer.h; sourceTree = "<group>"; };
 		562A94BCB9663038A15C3E8B /* NBEngineExports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBEngineExports.h; sourceTree = "<group>"; };
 		C3DA496DBB39706D6FACCF3B /* NBNodeJSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBNodeJSON.h; sourceTree = "<group>"; };
 		DA52C21F8595F38CC861F4AF /* EngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineTests.swift; sourceTree = "<group>"; };
@@ -134,9 +137,11 @@
 				6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */,
 				9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */,
 				23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */,
+				F3BA82737340DBD6C6B04C04 /* NBLocationAuthorizer.m */,
 				A975637496F0B68519C55BD8 /* NBWiFiBridge.h */,
 				CF11E2AEB83E64A6CF7059EF /* NBWiFiHotspot.h */,
 				44B0D24B19FB2DD78BFCF32B /* NBWiFiModels.h */,
+				B2B9FCBDAFF9B0FB0A6736AA /* NBLocationAuthorizer.h */,
 			);
 			path = Bridge;
 			sourceTree = "<group>";
@@ -294,6 +299,7 @@
 				E1CCF4EA29BEFD7D8AA99510 /* NBWiFiBridge.m in Sources */,
 				3F44490F226C4F7C418A08B5 /* NBWiFiHotspot.m in Sources */,
 				66292D1E0A29377E7485310A /* NBWiFiModels.m in Sources */,
+				C17996884F532F9599DEC0CB /* NBLocationAuthorizer.m in Sources */,
 				2BB0A9234B33AA0EBEA28C2F /* NBNodeJSON.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,7 +371,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/NetBar/NetBar-Bridging-Header.h";
 				HEADER_SEARCH_PATHS = ("$(SRCROOT)/NetBar/Bridge", "$(SRCROOT)/Contracts");
 				LIBRARY_SEARCH_PATHS = ("$(NETBAR_ENGINE_LIB_DIR)");
-				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
+				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreLocation", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
 				ENABLE_APP_SANDBOX = NO;
 				ARCHS = "arm64 x86_64";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -385,7 +391,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/NetBar/NetBar-Bridging-Header.h";
 				HEADER_SEARCH_PATHS = ("$(SRCROOT)/NetBar/Bridge", "$(SRCROOT)/Contracts");
 				LIBRARY_SEARCH_PATHS = ("$(NETBAR_ENGINE_LIB_DIR)");
-				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
+				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreLocation", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
 				ENABLE_APP_SANDBOX = NO;
 				ARCHS = "arm64 x86_64";
 				ENABLE_HARDENED_RUNTIME = YES;

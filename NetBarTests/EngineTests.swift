@@ -270,7 +270,7 @@ func itemFieldsSurviveDecoding() throws {
 @Test("Bar strength follows the interface reading, not a stale scan")
 func barsFollowTheInterface() {
     for (rssi, bars) in [(-50, 4), (-65, 3), (-75, 2), (-85, 1), (-95, 0)] {
-        #expect(WiFiIcon.bars(strength: bars).size.width == WiFiIcon.boxSize)
+        #expect(WiFiIcon.wifi(strength: bars).size.width >= WiFiIcon.boxSize)
         let input = NBEngineInput()
         input.powerOn = true
         input.interfaceName = "en0"

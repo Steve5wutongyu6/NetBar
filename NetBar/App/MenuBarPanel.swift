@@ -60,11 +60,11 @@ final class MenuBarController: NSObject {
     func updateStatusItem() {
         guard let button = statusItem?.button else { return }
         if let title = store.statusTitle {
-            button.image = WiFiIcon.statusSymbol(isHotspot: false, powerOn: false, strength: 0)
+            button.image = WiFiIcon.statusGlyph(isHotspot: false, powerOn: false, strength: 0)
             button.toolTip = title
             button.setAccessibilityLabel(title)
         } else {
-            button.image = WiFiIcon.statusSymbol(
+            button.image = WiFiIcon.statusGlyph(
                 isHotspot: store.connectedIsHotspot,
                 powerOn: true,
                 strength: store.strength

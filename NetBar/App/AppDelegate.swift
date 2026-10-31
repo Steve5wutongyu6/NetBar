@@ -14,6 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // The test bundle is hosted inside this app, so the tests would otherwise
+        // add a status item and trigger the Location prompt on the tester's Mac.
+        guard !Self.isRunningTests else { return }
         NSApp.setActivationPolicy(.accessory)
 
         switch LaunchOptions.current {
@@ -39,6 +42,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = MenuBarController(store: store)
         self.controller = controller
         controller.start()
+
+        guard case .live = source else { return }
+        // macOS reveals network names only to an authorized app, and it only
+        // lists an app that asked. Asking at launch is what makes the menu show
+        // names instead of a privacy row; after the first answer it is silent.
+        Task { await store.requestNameAccess() }
+    }
+}
+
+extension AppDelegate {
+    /// YES when the process is a test host rather than the running app.
+    static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
     }
 }
 

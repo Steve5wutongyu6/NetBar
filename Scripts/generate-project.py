@@ -29,6 +29,7 @@ SOURCES = [
     ("NetBar/Bridge/NBWiFiBridge.m", "Bridge"),
     ("NetBar/Bridge/NBWiFiHotspot.m", "Bridge"),
     ("NetBar/Bridge/NBWiFiModels.m", "Bridge"),
+    ("NetBar/Bridge/NBLocationAuthorizer.m", "Bridge"),
     ("Contracts/NBNodeJSON.m", "Contracts"),
 ]
 
@@ -37,6 +38,7 @@ HEADERS = [
     ("NetBar/Bridge/NBWiFiBridge.h", "Bridge"),
     ("NetBar/Bridge/NBWiFiHotspot.h", "Bridge"),
     ("NetBar/Bridge/NBWiFiModels.h", "Bridge"),
+    ("NetBar/Bridge/NBLocationAuthorizer.h", "Bridge"),
     ("Contracts/NBEngineExports.h", "Contracts"),
     ("Contracts/NBNodeJSON.h", "Contracts"),
 ]
@@ -351,7 +353,7 @@ APP_SETTINGS = [
     ("SWIFT_OBJC_BRIDGING_HEADER", "\"$(SRCROOT)/NetBar/NetBar-Bridging-Header.h\""),
     ("HEADER_SEARCH_PATHS", "(\"$(SRCROOT)/NetBar/Bridge\", \"$(SRCROOT)/Contracts\")"),
     ("LIBRARY_SEARCH_PATHS", "(\"$(NETBAR_ENGINE_LIB_DIR)\")"),
-    ("OTHER_LDFLAGS", "(\"-lnetbar_engine\", \"-lc++\", \"-lresolv\", \"-framework\", \"AppKit\", \"-framework\", \"CoreWLAN\", \"-framework\", \"Foundation\", \"-framework\", \"Security\")"),
+    ("OTHER_LDFLAGS", "(\"-lnetbar_engine\", \"-lc++\", \"-lresolv\", \"-framework\", \"AppKit\", \"-framework\", \"CoreLocation\", \"-framework\", \"CoreWLAN\", \"-framework\", \"Foundation\", \"-framework\", \"Security\")"),
     ("ENABLE_APP_SANDBOX", "NO"),
     # Xcode resolves a concrete destination for the host machine and would
     # otherwise build a single slice; the release must carry both.

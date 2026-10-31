@@ -49,6 +49,21 @@ final class WiFiStore {
         await load(scan: scan)
     }
 
+    /// Asks for Location Services authorization. macOS reveals network names to
+    /// authorized apps only, and an app that never asks does not even appear in
+    /// the pane the settings link opens.
+    func requestNameAccess() async {
+        let authorizer = NBLocationAuthorizer.shared()
+        await withCheckedContinuation { continuation in
+            authorizer.requestAuthorization { _ in
+                continuation.resume()
+            }
+        }
+        if NBLocationAuthorizer.shared().isAuthorized {
+            await refresh(scan: true)
+        }
+    }
+
     func setPower(_ on: Bool) async {
         guard case .live = source else {
             powerOn = on
@@ -75,6 +90,9 @@ final class WiFiStore {
         case .live:
             isScanning = true
             defer { isScanning = false }
+            // Registers the app with Location Services on the first capture, so
+            // the authorization prompt can appear at all.
+            _ = NBLocationAuthorizer.shared()
             let preferred = NBWiFiBridge.preferredNetworkNames()
             let snapshot = await Self.capture(scan: scan)
             lastSnapshot = snapshot

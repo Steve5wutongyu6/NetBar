@@ -41,7 +41,12 @@ struct MenuPanelView: View {
                 // Only shown when macOS actually withheld the names; elsewhere
                 // the panel stays silent about privacy.
                 SettingsLinkRow(title: "Allow NetBar to See Network Names…") {
-                    NBWiFiBridge.openPrivacySettings()
+                    Task {
+                        // Asking first is what puts NetBar in the Location
+                        // Services list the pane opens.
+                        await store.requestNameAccess()
+                        NBWiFiBridge.openPrivacySettings()
+                    }
                 }
             } else {
                 SettingsLinkRow(title: "Wi-Fi Settings…") {
@@ -61,8 +66,20 @@ struct MenuPanelView: View {
 
     /// Engine rows, minus the footer the panel draws itself.
     private var rows: [AnyView] {
-        store.output.items.compactMap { item in
-            switch item.role {
+        var rendered: [AnyView] = []
+        let breaks = MenuRowPlanner.separatorOffsets(in: store.output.items)
+        for (offset, item) in store.output.items.enumerated() {
+            guard let row = rowView(for: item) else { continue }
+            if breaks.contains(offset) {
+                rendered.append(AnyView(SectionSeparator()))
+            }
+            rendered.append(row)
+        }
+        return rendered
+    }
+
+    private func rowView(for item: NBEngineItem) -> AnyView? {
+        switch item.role {
             case .header:
                 return AnyView(SectionHeaderRow(title: item.title ?? ""))
             case .network:
@@ -78,8 +95,37 @@ struct MenuPanelView: View {
                 return nil
             @unknown default:
                 return nil
-            }
         }
+    }
+}
+
+/// Decides where the menu puts a hairline. The Wi-Fi menu divides Personal
+/// Hotspots, saved networks and strangers, so a separator sits between sections
+/// and never inside one.
+enum MenuRowPlanner {
+    /// Offsets of the rows that need a separator drawn above them.
+    static func separatorOffsets(in items: [NBEngineItem]) -> Set<Int> {
+        var offsets: Set<Int> = []
+        var previous: NBItemSection?
+        for (offset, item) in items.enumerated() {
+            defer { previous = item.section }
+            guard let previous, previous != item.section else { continue }
+            // The footer draws its own rule.
+            guard item.role != .settings else { continue }
+            offsets.insert(offset)
+        }
+        return offsets
+    }
+}
+
+/// Hairline between two sections.
+private struct SectionSeparator: View {
+    var body: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.10))
+            .frame(height: 1)
+            .padding(.horizontal, MenuMetrics.innerPadding)
+            .padding(.vertical, 3)
     }
 }
 
@@ -190,12 +236,23 @@ private struct TrailingDetail: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Image(nsImage: WiFiIcon.bars(strength: Int(item.strength)))
+            Image(nsImage: signalGlyph)
                 .renderingMode(.template)
                 .foregroundStyle(.primary)
-                .frame(width: WiFiIcon.boxSize, height: WiFiIcon.boxSize)
+                // Symbols carry their own padding; keep the natural drawing and
+                // only reserve a minimum column so rows stay aligned.
+                .frame(minWidth: WiFiIcon.boxSize, alignment: .trailing)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// A Personal Hotspot is drawn with the Cellular glyph so it never reads as
+    /// an ordinary Wi-Fi network.
+    private var signalGlyph: NSImage {
+        if item.detailKind == .appleHotspot {
+            return WiFiIcon.cellular(strength: Int(item.strength))
+        }
+        return WiFiIcon.wifi(strength: Int(item.strength))
     }
 }
 

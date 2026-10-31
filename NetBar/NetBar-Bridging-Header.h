@@ -5,5 +5,6 @@
 
 #import "NBWiFiBridge.h"
 #import "NBWiFiHotspot.h"
+#import "NBLocationAuthorizer.h"
 #import "NBEngineExports.h"
 #import "NBNodeJSON.h"
