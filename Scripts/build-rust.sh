@@ -40,7 +40,9 @@ fi
 # Decide by what rustup can actually do: Homebrew builds run with a rustup shim
 # on PATH but no usable toolchain, and there the plain build is the right one.
 use_rustup=0
-if command -v rustup >/dev/null 2>&1 \
+if [ "${NETBAR_PLAIN_CARGO:-0}" = "1" ]; then
+  use_rustup=0
+elif command -v rustup >/dev/null 2>&1 \
    && rustup which rustc >/dev/null 2>&1 \
    && [ -n "$(rustup target list --installed 2>/dev/null)" ]; then
   use_rustup=1

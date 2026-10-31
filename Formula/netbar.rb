@@ -13,6 +13,8 @@ class Netbar < Formula
     # The project builds against the newest SDK; a machine with an older one
     # still builds, against what it has.
     ENV["NETBAR_ALLOW_OLDER_SDK"] = "1"
+    # Homebrew provides its own cargo without rustup; build the host slice.
+    ENV["NETBAR_PLAIN_CARGO"] = "1"
     system "./Scripts/build-rust.sh"
     system "./Scripts/build.sh", "--release"
 
