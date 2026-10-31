@@ -2,9 +2,10 @@
 //  NBWiFiModels.h
 //  NetBar
 //
-//  Immutable value types the Objective-C Wi-Fi bridge hands to Swift.
-//  Every field is plain C or a nullability-annotated type so the Swift importer
-//  generates clean, optional-correct interfaces.
+//  Notification-style reference types the Objective-C Wi-Fi bridge hands to
+//  Swift: one object per capture, written by the bridge and then read-only in
+//  practice. Every field is plain C or a nullability-annotated type so the Swift
+//  importer generates clean, optional-correct interfaces.
 //
 
 #import <Foundation/Foundation.h>

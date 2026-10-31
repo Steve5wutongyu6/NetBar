@@ -313,5 +313,9 @@ final class WiFiStore {
     }
 }
 
+// Both models are filled on one thread and then handed over: a snapshot is
+// written by the capture queue before it crosses to the main actor, and an engine
+// reply is decoded on the calling thread before it is used. Neither is mutated
+// after that hand-off, which is what the unchecked conformance asserts.
 extension NBSnapshot: @unchecked Sendable {}
 extension NBEngineOutput: @unchecked Sendable {}
