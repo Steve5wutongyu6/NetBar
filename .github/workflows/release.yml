@@ -111,6 +111,24 @@ jobs:
           ruby -c Casks/netbar.rb
           cp Casks/netbar.rb "dist/netbar-${GITHUB_REF_NAME}-cask.rb"
 
+      - name: Commit the cask back to main
+        # Without this the cask in the repository trails every release until
+        # someone remembers to bump it by hand.
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          Scripts/update-brew.sh "${GITHUB_REF_NAME}" "dist/NetBar-${GITHUB_REF_NAME}.zip"
+          git add Casks/netbar.rb
+          if git diff --cached --quiet; then
+            echo "cask already points at ${GITHUB_REF_NAME}"
+          else
+            git commit -m "chore: point the cask at ${GITHUB_REF_NAME}"
+            git push origin main
+          fi
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
