@@ -49,9 +49,17 @@ fi
 
 # Xcode 27 resolves the scheme's destination to the local Mac and then builds
 # only that slice, so a universal release states its architectures outright.
+# A host-only engine build (plain cargo, e.g. Homebrew) cannot carry two slices,
+# so the app matches it instead.
+HOST_ARCH="$(uname -m)"
 if [ "${CONFIG}" = Release ]; then
-  ARGS+=(ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
-  TEST_ARGS+=("ARCHS=arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+  if [ "${NETBAR_PLAIN_CARGO:-0}" = "1" ]; then
+    ARGS+=("ARCHS=${HOST_ARCH}" ONLY_ACTIVE_ARCH=YES)
+    TEST_ARGS+=("ARCHS=${HOST_ARCH}" ONLY_ACTIVE_ARCH=YES)
+  else
+    ARGS+=(ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+    TEST_ARGS+=("ARCHS=arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+  fi
 fi
 if [ -n "${XCCONFIG}" ]; then
   ARGS+=(-xcconfig "${XCCONFIG}")

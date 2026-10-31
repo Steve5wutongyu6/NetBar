@@ -10,13 +10,20 @@ class Netbar < Formula
   depends_on :macos
 
   def install
-    # The project builds against the newest SDK; a machine with an older one
-    # still builds, against what it has.
-    ENV["NETBAR_ALLOW_OLDER_SDK"] = "1"
-    # Homebrew provides its own cargo without rustup; build the host slice.
-    ENV["NETBAR_PLAIN_CARGO"] = "1"
-    system "./Scripts/build-rust.sh"
-    system "./Scripts/build.sh", "--release"
+    # Xcode's Swift macro plugins do not survive Homebrew's build environment:
+    # swift-plugin-server answers malformed. The app is therefore built in a
+    # clean environment with only the toolchain and Rust on the path.
+    developer_dir = Utils.safe_popen_read("/usr/bin/xcode-select", "-p").strip
+    # Homebrew's rust has no rustup, so it builds the host architecture.
+    build_env = {
+      "HOME"                   => Dir.home,
+      "PATH"                   => "#{formula_opt_bin("rust")}:/usr/bin:/bin:/usr/sbin:/sbin",
+      "DEVELOPER_DIR"          => developer_dir,
+      "NETBAR_ALLOW_OLDER_SDK" => "1",
+      "NETBAR_PLAIN_CARGO"     => "1",
+    }
+    system "/usr/bin/env", "-i", *build_env.map { |key, value| "#{key}=#{value}" },
+           "./Scripts/build.sh", "--release"
 
     app = Pathname("build/Release/NetBar.app")
     odie "NetBar.app was not produced" unless app.exist?
