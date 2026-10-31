@@ -390,3 +390,26 @@ func barsFollowTheInterface() {
         #expect(Int(EngineBridge.render(input).connectedStrength) == bars)
     }
 }
+
+@MainActor
+@Test("A state-only refresh keeps the redaction verdict from the last scan")
+func stateRefreshKeepsNameAvailability() throws {
+    // A scan that found every name withheld.
+    let scanned = NBSnapshot()
+    scanned.powerOn = true
+    scanned.interfaceName = "en0"
+    scanned.currentSSID = nil
+    scanned.currentRSSI = -60
+    scanned.namesAvailable = false
+    scanned.namesAvailabilityKnown = true
+    scanned.namesUnavailableReason = "hidden"
+    #expect(scanned.namesAvailabilityKnown)
+
+    // The state-only path answers nothing about names.
+    let state = NBSnapshot()
+    state.powerOn = true
+    state.interfaceName = "en0"
+    state.currentSSID = nil
+    state.currentRSSI = -61
+    #expect(state.namesAvailabilityKnown == false, "state capture must not claim either way")
+}

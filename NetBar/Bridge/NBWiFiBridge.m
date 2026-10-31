@@ -215,7 +215,7 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     if (interface == nil) {
         // Machines without a Wi-Fi radio: a valid, empty snapshot.
         snapshot.powerOn = NO;
-        snapshot.namesAvailable = YES;
+        snapshot.namesAvailabilityKnown = NO;
         return snapshot;
     }
 
@@ -225,8 +225,10 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     snapshot.currentBSSID = interface.bssid;
     snapshot.currentRSSI = interface.rssiValue;
     // State use is cheap enough to call synchronously; the connected network is
-    // described by its own scan record, so the hotspot fields stay at defaults here.
-    snapshot.namesAvailable = YES;
+    // described by its own scan record, so the hotspot fields stay at defaults
+    // here. Name availability is only observable by scanning, so it stays
+    // unknown and the caller keeps the last scan's verdict.
+    snapshot.namesAvailabilityKnown = NO;
     return snapshot;
 }
 
@@ -301,8 +303,9 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     }];
     snapshot.networks = networks;
 
+    snapshot.namesAvailabilityKnown = YES;
+    snapshot.namesAvailable = !allNamesRedacted;
     if (allNamesRedacted) {
-        snapshot.namesAvailable = NO;
         snapshot.namesUnavailableReason = NBNamesUnavailableReason;
     }
 

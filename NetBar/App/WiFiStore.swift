@@ -44,7 +44,7 @@ final class WiFiStore {
     /// Networks from the last full scan. A state-only refresh reuses them, so
     /// reading the connection state never empties the list.
     private var scannedNetworks: [NBScannedNetwork] = []
-    private var hotspotState = HotspotState()
+    private var scanState = ScanState()
     private var lastInput: NBEngineInput?
 
     init(source: Source = .live) {
@@ -136,12 +136,12 @@ final class WiFiStore {
             let snapshot = await Self.capture(scan: scan)
             if scan {
                 scannedNetworks = snapshot.networks
-                hotspotState = Self.hotspotState(of: snapshot)
+                scanState = Self.scanState(of: snapshot)
             } else {
-                // The connection state changed, the radio's neighbourhood did not.
+                // The connection state changed, the radio's neighbourhood did not,
+                // so everything a scan had established carries over.
                 snapshot.networks = scannedNetworks
-                // Hotspot metadata also comes from the scan, so it carries over.
-                Self.restore(hotspotState, into: snapshot)
+                Self.restore(scanState, into: snapshot)
             }
             lastSnapshot = snapshot
             let input = Self.input(from: snapshot, preferred: preferred)
@@ -149,28 +149,37 @@ final class WiFiStore {
         }
     }
 
-    /// What a full scan told us about the joined network's hotspot status.
-    private struct HotspotState {
+    /// What a full scan established and a state-only capture cannot know.
+    private struct ScanState {
         var isPersonalHotspot = false
         var isApplePersonalHotspot = false
         var network: NBHotspotNetwork = .networkUnknown
         var battery = 0
+        var namesAvailable = true
+        var namesUnavailableReason: String?
+        var namesAvailabilityKnown = false
     }
 
-    private static func hotspotState(of snapshot: NBSnapshot) -> HotspotState {
-        HotspotState(
+    private static func scanState(of snapshot: NBSnapshot) -> ScanState {
+        ScanState(
             isPersonalHotspot: snapshot.currentIsPersonalHotspot,
             isApplePersonalHotspot: snapshot.currentIsApplePersonalHotspot,
             network: snapshot.currentHotspotNetwork,
-            battery: snapshot.currentHotspotBattery
+            battery: snapshot.currentHotspotBattery,
+            namesAvailable: snapshot.namesAvailable,
+            namesUnavailableReason: snapshot.namesUnavailableReason,
+            namesAvailabilityKnown: snapshot.namesAvailabilityKnown
         )
     }
 
-    private static func restore(_ state: HotspotState, into snapshot: NBSnapshot) {
+    private static func restore(_ state: ScanState, into snapshot: NBSnapshot) {
         snapshot.currentIsPersonalHotspot = state.isPersonalHotspot
         snapshot.currentIsApplePersonalHotspot = state.isApplePersonalHotspot
         snapshot.currentHotspotNetwork = state.network
         snapshot.currentHotspotBattery = state.battery
+        snapshot.namesAvailable = state.namesAvailable
+        snapshot.namesUnavailableReason = state.namesUnavailableReason
+        snapshot.namesAvailabilityKnown = state.namesAvailabilityKnown
     }
 
     /// Re-renders the last capture, e.g. after the user unfolded the list.
@@ -194,7 +203,11 @@ final class WiFiStore {
         strength = Int(rendered.connectedStrength)
         if let snapshot = lastSnapshot {
             powerOn = snapshot.powerOn
-            namesUnavailable = !snapshot.namesAvailable
+            // Only a scan can answer this; until one has run, the redaction of the
+            // joined name is the best evidence there is.
+            if snapshot.namesAvailabilityKnown {
+                namesUnavailable = !snapshot.namesAvailable
+            }
         }
     }
 
