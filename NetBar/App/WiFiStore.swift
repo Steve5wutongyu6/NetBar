@@ -227,11 +227,13 @@ final class WiFiStore {
         }
     }
 
-    /// Renders an engine request directly. Used by snapshot rendering and tests
-    /// to lay out a menu that no capture produced.
+#if DEBUG
+    /// Renders an engine request directly, for tests that need a menu no capture
+    /// produced. Debug builds only: nothing in the app uses it.
     func applyForTesting(_ input: NBEngineInput) {
         renderAndApplySynchronously(input)
     }
+#endif
 
     /// Hydrates a fixture capture synchronously, for snapshot rendering where no
     /// run loop is available yet.
