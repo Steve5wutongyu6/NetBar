@@ -65,7 +65,14 @@ final class WiFiStore {
     /// The answer can take a while, and a suppressed prompt may never arrive, so
     /// this does not wait: the authorization notification brings the new state.
     func requestNameAccess() {
-        NBLocationAuthorizer.shared().requestAuthorization(completion: nil)
+        // The answer arrives on the main thread; refreshing here covers a missed
+        // notification, and the notification covers an answer we were not waiting for.
+        NBLocationAuthorizer.shared().requestAuthorization { [weak self] authorization in
+            guard authorization == .authorized else { return }
+            Task { @MainActor in
+                await self?.refresh(scan: true)
+            }
+        }
     }
 
     /// Re-reads the radio after the user changed the authorization.
