@@ -37,7 +37,16 @@ if [ "${PROFILE}" = release ]; then
   PROFILE_FLAG="--release"
 fi
 
-if command -v rustup >/dev/null 2>&1; then
+# Decide by what rustup can actually do: Homebrew builds run with a rustup shim
+# on PATH but no usable toolchain, and there the plain build is the right one.
+use_rustup=0
+if command -v rustup >/dev/null 2>&1 \
+   && rustup which rustc >/dev/null 2>&1 \
+   && [ -n "$(rustup target list --installed 2>/dev/null)" ]; then
+  use_rustup=1
+fi
+
+if [ "${use_rustup}" -eq 1 ]; then
   # Homebrew's rust can shadow the rustup toolchain on PATH, and its rustc only
   # ships the host target, so both binaries are pinned to the rustup toolchain.
   CARGO="$(rustup which cargo 2>/dev/null || command -v cargo)"
@@ -70,7 +79,8 @@ if command -v rustup >/dev/null 2>&1; then
 else
   # No rustup: one host-architecture build. A universal release comes from the
   # rustup toolchain, which is what CI and the published cask use.
-  echo "build-rust: no rustup, building for the host architecture" >&2
+  echo "build-rust: plain cargo, building for the host architecture" >&2
+  unset RUSTC || true
   cargo build ${PROFILE_FLAG} --locked --manifest-path "${ROOT}/engine/Cargo.toml" >&2
   cp "${ROOT}/engine/target/${PROFILE}/libnetbar_engine.a" "${OUT}/libnetbar_engine.a"
 fi
