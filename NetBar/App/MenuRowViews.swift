@@ -118,6 +118,36 @@ enum MenuRowPlanner {
     }
 }
 
+/// Hover treatment for a clickable row: the menu highlight plus a pointing hand.
+/// The cursor is set rather than pushed, so a row that disappears under the
+/// pointer cannot leave the hand behind.
+private struct RowHover: ViewModifier {
+    var isEnabled: Bool = true
+
+    @State private var isHovering = false
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                if isEnabled && isHovering {
+                    RoundedRectangle(cornerRadius: MenuMetrics.cornerRadius, style: .continuous)
+                        .fill(Color.primary.opacity(0.08))
+                }
+            }
+            .onHover { hovering in
+                isHovering = hovering && isEnabled
+                guard isEnabled else { return }
+                (hovering ? NSCursor.pointingHand : NSCursor.arrow).set()
+            }
+    }
+}
+
+private extension View {
+    func rowHover(isEnabled: Bool = true) -> some View {
+        modifier(RowHover(isEnabled: isEnabled))
+    }
+}
+
 /// Hairline between two sections.
 private struct SectionSeparator: View {
     var body: some View {
@@ -180,8 +210,6 @@ private struct NetworkRow: View {
     let item: NBEngineItem
     let join: () -> Void
 
-    @State private var isHovering = false
-
     private var isActionable: Bool {
         !item.isJoined && item.ssid != nil
     }
@@ -204,23 +232,7 @@ private struct NetworkRow: View {
         .buttonStyle(.plain)
         .disabled(!isActionable)
         .padding(.horizontal, MenuMetrics.innerPadding)
-        .background {
-            if isHovering && isActionable {
-                RoundedRectangle(cornerRadius: MenuMetrics.cornerRadius, style: .continuous)
-                    .fill(Color.primary.opacity(0.08))
-            }
-        }
-        .onHover { hovering in
-            isHovering = hovering
-            if isActionable {
-                // A clickable row says so before it is clicked.
-                if hovering {
-                    NSCursor.pointingHand.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
-        }
+        .rowHover(isEnabled: isActionable)
     }
 
     private var displayName: String {
@@ -292,8 +304,6 @@ private struct OtherNetworksRow: View {
     let isExpanded: Bool
     let toggle: () -> Void
 
-    @State private var isHovering = false
-
     var body: some View {
         Button(action: toggle) {
             HStack(spacing: 6) {
@@ -313,13 +323,7 @@ private struct OtherNetworksRow: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal, MenuMetrics.innerPadding)
-        .background {
-            if isHovering {
-                RoundedRectangle(cornerRadius: MenuMetrics.cornerRadius, style: .continuous)
-                    .fill(Color.primary.opacity(0.08))
-            }
-        }
-        .onHover { isHovering = $0 }
+        .rowHover()
         .accessibilityLabel(isExpanded ? "Other Networks, expanded" : "Other Networks")
     }
 }
@@ -328,8 +332,6 @@ private struct OtherNetworksRow: View {
 private struct SettingsLinkRow: View {
     let title: String
     let action: () -> Void
-
-    @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
@@ -342,13 +344,7 @@ private struct SettingsLinkRow: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal, MenuMetrics.innerPadding)
-        .background {
-            if isHovering {
-                RoundedRectangle(cornerRadius: MenuMetrics.cornerRadius, style: .continuous)
-                    .fill(Color.primary.opacity(0.08))
-            }
-        }
-        .onHover { isHovering = $0 }
+        .rowHover()
     }
 }
 
