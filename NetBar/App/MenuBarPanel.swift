@@ -56,6 +56,10 @@ final class MenuBarController: NSObject {
         if let wakeObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
         }
+        // `deinit` is not on the main actor, so the monitor is dropped directly.
+        if let dismissMonitor {
+            NSEvent.removeMonitor(dismissMonitor)
+        }
         NBWiFiMonitor.shared().stop()
     }
 
@@ -155,6 +159,7 @@ final class MenuBarController: NSObject {
         panel.onDismiss = { [weak self] in
             self?.statusItem?.button?.highlight(false)
             self?.stopRefreshTimer()
+            self?.removeDismissMonitor()
         }
 
         Task { @MainActor in
@@ -190,13 +195,22 @@ final class MenuBarController: NSObject {
         hostingView = host
 
         // A borderless panel has no title bar to drag, and a click anywhere else
-        // dismisses it the way a menu does.
+        // dismisses it the way a menu does. The monitor lives only while the panel
+        // does: a global monitor that outlives its window keeps the app awake and
+        // keeps swallowing every click on the system.
+        removeDismissMonitor()
         dismissMonitor = NSEvent.addGlobalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown]
         ) { [weak self] _ in
             self?.panel?.dismiss()
         }
         return panel
+    }
+
+    private func removeDismissMonitor() {
+        guard let monitor = dismissMonitor else { return }
+        NSEvent.removeMonitor(monitor)
+        dismissMonitor = nil
     }
 
     /// The panel is exactly as tall as its content.
