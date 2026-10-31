@@ -102,11 +102,22 @@ jobs:
           NETBAR_ALLOW_OLDER_SDK: '1'
         run: Scripts/package.sh "${GITHUB_REF_NAME}"
 
+      - name: Update Homebrew files
+        env:
+          NETBAR_ALLOW_OLDER_SDK: '1'
+        run: |
+          set -euo pipefail
+          Scripts/update-brew.sh "${GITHUB_REF_NAME}" "dist/NetBar-${GITHUB_REF_NAME}.zip"
+          ruby -c Formula/netbar.rb
+          ruby -c Casks/netbar.rb
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.zip
             dist/SHA256SUMS.txt
+            Formula/netbar.rb
+            Casks/netbar.rb
           generate_release_notes: true
           draft: false

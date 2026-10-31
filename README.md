@@ -6,7 +6,20 @@
 
 ## 安装
 
-从 [Releases](../../releases) 下载 `NetBar.zip`,解压后将 `NetBar.app` 拖入「应用程序」。
+用 Homebrew 安装预编译版本:
+
+```sh
+brew tap Steve5wutongyu6/netbar https://github.com/Steve5wutongyu6/NetBar.git
+brew install --cask netbar
+```
+
+需要本机编译:
+
+```sh
+brew install --build-from-source netbar
+```
+
+也可以从 [Releases](../../releases) 下载 zip,解压后把 `NetBar.app` 拖入「应用程序」。
 
 ## 构建
 
