@@ -40,7 +40,8 @@ func sampleRenders() async throws {
     #expect(image.pixelsHigh > 0)
     // A menu is wider than it is tall.
     #expect(CGFloat(image.pixelsWide) / CGFloat(image.pixelsHigh) > 1)
-    let data = try #require(pngData(store))
+    let png = try pngData(store)
+    let data = try #require(png)
     #expect(data.count > 2_000)
     // PNG signature, so a truncated write cannot pass as success.
     #expect(Array(data.prefix(4)) == [0x89, 0x50, 0x4E, 0x47])
@@ -84,7 +85,7 @@ func sectionsAreSeparated() throws {
 
 @MainActor
 @Test("Unfolding the strangers makes the rendered menu taller")
-func unfoldingGrowsTheMenu() async {
+func unfoldingGrowsTheMenu() async throws {
     let store = renderedStore("sample.json")
     let folded = try SnapshotRenderer.image(for: store).pixelsHigh
     await store.setRevealsOther(true)
