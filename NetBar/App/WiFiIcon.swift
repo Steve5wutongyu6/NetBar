@@ -17,18 +17,30 @@ enum WiFiIcon {
     /// Signal levels the menu distinguishes.
     static let levels = 4
 
+    /// The system symbols the menu draws.
+    private enum SymbolName {
+        static let wifi = "wifi"
+        static let cellular = "cellularbars"
+        static let wifiOff = "wifi.slash"
+        static let wifiWeak = "wifi.exclamationmark"
+    }
+
     /// `wifi` itself has three fill levels: one per arc above the dot.
     private static let wifiLevels = 3
 
     private static let cache = NSCache<NSString, NSImage>()
 
-    /// Wi-Fi glyph for a 0...4 strength.
+    /// Wi-Fi glyph for a 0...4 strength. Zero is not "very weak bars": it is a
+    /// signal too poor to score, which the system draws as its own symbol.
     static func wifi(strength: Int) -> NSImage {
         let level = clamp(strength)
         return cached("wifi-\(level)") {
+            guard level > 0 else {
+                return symbol(named: SymbolName.wifiWeak)
+            }
             // Four strengths map onto the symbol's three arcs, as the system does.
             let step = min(max(level, 1), wifiLevels)
-            return symbol(named: "wifi", variableValue: Double(step) / Double(wifiLevels))
+            return symbol(named: SymbolName.wifi, variableValue: Double(step) / Double(wifiLevels))
         }
     }
 
@@ -37,7 +49,7 @@ enum WiFiIcon {
         let level = clamp(strength)
         return cached("cellular-\(level)") {
             let step = max(level, 1)
-            return symbol(named: "cellularbars", variableValue: Double(step) / Double(levels))
+            return symbol(named: SymbolName.cellular, variableValue: Double(step) / Double(levels))
         }
     }
 
@@ -46,7 +58,7 @@ enum WiFiIcon {
     /// alike.
     static func statusGlyph(isHotspot: Bool, powerOn: Bool, strength: Int) -> NSImage? {
         guard powerOn else {
-            return symbol(named: "wifi.slash")
+            return symbol(named: SymbolName.wifiOff)
         }
         return isHotspot ? cellular(strength: strength) : wifi(strength: strength)
     }
