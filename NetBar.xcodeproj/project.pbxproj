@@ -345,7 +345,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8106CB2DB77D840F47A41D18 /* Debug.xcconfig */;
 			buildSettings = {
-				MARKETING_VERSION = 1.0.0;
 				CURRENT_PROJECT_VERSION = 1;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -363,7 +362,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */;
 			buildSettings = {
-				MARKETING_VERSION = 1.0.0;
 				CURRENT_PROJECT_VERSION = 1;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;

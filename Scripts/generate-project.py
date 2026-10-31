@@ -377,8 +377,9 @@ TEST_SETTINGS = [
     ("ENABLE_HARDENED_RUNTIME", "YES"),
     ("ARCHS", "\"arm64 x86_64\""),
 ]
+# MARKETING_VERSION and CURRENT_PROJECT_VERSION live in Configs/Shared.xcconfig;
+# the project file must not repeat them, or the two drift apart.
 PROJECT_SETTINGS = [
-    ("MARKETING_VERSION", "1.0.0"),
     ("CURRENT_PROJECT_VERSION", "1"),
     ("CLANG_ENABLE_MODULES", "YES"),
     ("CLANG_ENABLE_OBJC_ARC", "YES"),
