@@ -23,7 +23,7 @@ static const NSTimeInterval NBCoalesceInterval = 0.25;
 
 @implementation NBWiFiMonitor
 
-+ (instancetype)sharedMonitor
++ (instancetype)shared
 {
     static NBWiFiMonitor *shared;
     static dispatch_once_t once;

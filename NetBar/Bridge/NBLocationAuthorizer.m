@@ -20,7 +20,7 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
 
 @implementation NBLocationAuthorizer
 
-+ (instancetype)sharedAuthorizer
++ (instancetype)shared
 {
     static NBLocationAuthorizer *shared;
     static dispatch_once_t once;

@@ -34,7 +34,7 @@ static NSString *const NBHotspotSessionDelegateSelector = @"session:updatedFound
 
 @implementation NBHotspotMonitor
 
-+ (instancetype)sharedMonitor
++ (instancetype)shared
 {
     static NBHotspotMonitor *shared;
     static dispatch_once_t once;
