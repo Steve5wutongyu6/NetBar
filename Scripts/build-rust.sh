@@ -31,12 +31,18 @@ command -v cargo >/dev/null 2>&1 || {
 OUT="${ROOT}/engine/target/universal/${PROFILE}"
 mkdir -p "${OUT}"
 
-profile_flag=()
+# macOS ships bash 3.2, where an empty array cannot be expanded under `set -u`.
+PROFILE_FLAG=""
 if [ "${PROFILE}" = release ]; then
-  profile_flag=(--release)
+  PROFILE_FLAG="--release"
 fi
 
 if command -v rustup >/dev/null 2>&1; then
+  # Homebrew's rust can shadow the rustup toolchain on PATH, and its rustc only
+  # ships the host target, so both binaries are pinned to the rustup toolchain.
+  CARGO="$(rustup which cargo 2>/dev/null || command -v cargo)"
+  RUSTC="$(rustup which rustc 2>/dev/null || command -v rustc)"
+  export RUSTC
   slices=()
   for arch in ${ARCHS_TO_BUILD}; do
     case "${arch}" in
@@ -51,7 +57,7 @@ if command -v rustup >/dev/null 2>&1; then
         exit 1
       }
     fi
-    cargo build "${profile_flag[@]}" --locked --manifest-path "${ROOT}/engine/Cargo.toml" \
+    "${CARGO}" build ${PROFILE_FLAG} --locked --manifest-path "${ROOT}/engine/Cargo.toml" \
       --target "${triple}" >&2
     slices+=("${ROOT}/engine/target/${triple}/${PROFILE}/libnetbar_engine.a")
   done
@@ -65,7 +71,7 @@ else
   # No rustup: one host-architecture build. A universal release comes from the
   # rustup toolchain, which is what CI and the published cask use.
   echo "build-rust: no rustup, building for the host architecture" >&2
-  cargo build "${profile_flag[@]}" --locked --manifest-path "${ROOT}/engine/Cargo.toml" >&2
+  cargo build ${PROFILE_FLAG} --locked --manifest-path "${ROOT}/engine/Cargo.toml" >&2
   cp "${ROOT}/engine/target/${PROFILE}/libnetbar_engine.a" "${OUT}/libnetbar_engine.a"
 fi
 
