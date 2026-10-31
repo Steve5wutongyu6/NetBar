@@ -60,8 +60,9 @@ TEST_SOURCES = [
     ("NetBarTests/MenuRenderTests.swift", "NetBarTests"),
 ]
 
-# Fixtures ship inside the app so `--fixture/--snapshot` work from a built bundle.
-RESOURCE_FOLDERS = [("NetBarTests/Fixtures", "NetBarTests")]
+# Fixtures are a test asset: the app reads them by path (--fixture/--snapshot),
+# so bundling a copy into the shipped .app would only add weight.
+RESOURCE_FOLDERS: list[tuple[str, str]] = []
 
 APP = "NetBar"
 TESTS = "NetBarTests"
@@ -105,9 +106,7 @@ for path, _ in SOURCES:
 for path, _ in TEST_SOURCES:
     emit(f"\t\t{oid('build:' + path)} /* {os.path.basename(path)} in Sources */ = "
          f"{{isa = PBXBuildFile; fileRef = {oid('file:' + path)} /* {os.path.basename(path)} */; }};")
-for path, _ in RESOURCE_FOLDERS:
-    emit(f"\t\t{oid('build:' + path)} /* {os.path.basename(path)} in Resources */ = "
-         f"{{isa = PBXBuildFile; fileRef = {oid('file:' + path)} /* {os.path.basename(path)} */; }};")
+
 emit("/* End PBXBuildFile section */")
 
 # --- PBXContainerItemProxy --------------------------------------------------
@@ -197,8 +196,7 @@ group_body(oid("group:Contracts"), "Contracts",
            path="Contracts")
 group_body(oid("group:NetBarTests"), "NetBarTests",
            [f"{oid('file:' + path)} /* {os.path.basename(path)} */"
-            for path, g in TEST_SOURCES if g == "NetBarTests"]
-           + [f"{oid('file:' + path)} /* {os.path.basename(path)} */" for path, _ in RESOURCE_FOLDERS],
+            for path, g in TEST_SOURCES if g == "NetBarTests"],
            path="NetBarTests")
 group_body(oid("group:Configs"), "Configs",
            [f"{oid('file:' + path)} /* {os.path.basename(path)} */" for path in CONFIGS])
