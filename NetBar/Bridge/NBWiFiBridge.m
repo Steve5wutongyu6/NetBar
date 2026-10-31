@@ -371,8 +371,8 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     NSError *coreWLANError = nil;
     // `-[CWInterface setPower:error:]` carries no deprecation attribute in the macOS 27 SDK and the
     // header lists no replacement, so it is the supported way to toggle the radio. The diagnostic
-    // guard is kept deliberately: an SDK that does mark it deprecated must stay warning-free rather
-    // than silently breaking the build's -Werror policy.
+    // guard is kept deliberately: the release configuration treats warnings as errors, so an SDK
+    // that does mark it deprecated must not break the build.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     BOOL succeeded = [interface setPower:powerOn error:&coreWLANError];
