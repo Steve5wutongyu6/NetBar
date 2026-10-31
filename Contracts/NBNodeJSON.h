@@ -88,7 +88,6 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic) BOOL currentIsPersonalHotspot;
 @property (nonatomic) NBHotspotNetwork currentHotspotNetwork;
 @property (nonatomic) NSInteger currentHotspotBattery;
-@property (nonatomic) NSInteger currentStrength;
 /// Nearby sharing devices, decoded from the Continuity channel the system uses
 /// for the Cellular details of a Personal Hotspot.
 @property (nonatomic, copy) NSArray<NBHotspotPeerInfo *> *peers;
