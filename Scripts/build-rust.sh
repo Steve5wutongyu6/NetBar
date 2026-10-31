@@ -14,7 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="${NETBAR_PROFILE:-}"
 if [ -z "${PROFILE}" ]; then
-  case "${NETBAR_ENGINE_LIB_DIR:-}${NETBAR_ENGINE_PROFILE_DIR:-debug}" in
+  case "${NETBAR_ENGINE_LIB_DIR:-debug}" in
     */release*) PROFILE=release ;;
     *)          PROFILE=debug ;;
   esac
