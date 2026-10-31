@@ -25,7 +25,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -57,7 +57,7 @@ jobs:
           ls -l docs/menu.png
 
       - name: Upload snapshot
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: menu-snapshot
           path: docs/menu.png
@@ -65,7 +65,7 @@ jobs:
 
       - name: Collect logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-logs
           path: |
@@ -80,7 +80,7 @@ jobs:
     timeout-minutes: 60
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 

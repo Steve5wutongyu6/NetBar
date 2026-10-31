@@ -38,18 +38,15 @@ final class WiFiStore {
 
     let source: Source
     private var lastSnapshot: NBSnapshot?
-    private var refreshTask: Task<Void, Never>?
 
     init(source: Source = .live) {
         self.source = source
     }
 
-    /// Refreshes the menu, optionally rescanning the radio.
+    /// Refreshes the menu, optionally rescanning the radio. Callers await the
+    /// result, so a second refresh simply queues behind the first.
     func refresh(scan: Bool = true) async {
-        refreshTask?.cancel()
-        let task = Task { await load(scan: scan) }
-        refreshTask = task
-        await task.value
+        await load(scan: scan)
     }
 
     func setPower(_ on: Bool) async {
