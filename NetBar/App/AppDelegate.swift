@@ -20,6 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         switch LaunchOptions.current {
+        case .scanDump(let destination):
+            exit(Diagnostics.writeScanDump(to: destination))
         case .snapshot(let fixture, let destination):
             // Rendering mode: produce the image, then leave.
             do {
@@ -64,6 +66,7 @@ enum LaunchOptions {
     case live
     case fixture(URL)
     case snapshot(fixture: URL, destination: URL)
+    case scanDump(destination: String)
 
     static var current: LaunchOptions {
         let arguments = CommandLine.arguments
@@ -72,6 +75,9 @@ enum LaunchOptions {
                 return nil
             }
             return arguments[index + 1]
+        }
+        if let destination = value(after: "--scan-dump") {
+            return .scanDump(destination: destination)
         }
         let fixture = value(after: "--fixture").map { URL(fileURLWithPath: $0) }
         if let destination = value(after: "--snapshot") {

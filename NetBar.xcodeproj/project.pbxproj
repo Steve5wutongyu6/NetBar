@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FAD0C93F535178951529DEC4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */; };
+		1818B30EA853830D67396C22 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5EED518AF6840DFB5591DE6 /* Diagnostics.swift */; };
 		3A99BB4F6783157BE95AFB7E /* EngineBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */; };
 		51BD2A95DD40C27DFCF05753 /* MenuBarPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */; };
 		808DFBBC44CA017C1E8D2D3F /* MenuRowViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */; };
@@ -40,6 +41,7 @@
 		1E067BF8D97606C99F8B8D4D /* NetBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5455FD3870DD971346CE1802 /* NetBarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetBarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C5EED518AF6840DFB5591DE6 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineBridge.swift; sourceTree = "<group>"; };
 		C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPanel.swift; sourceTree = "<group>"; };
 		B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuRowViews.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */,
+				C5EED518AF6840DFB5591DE6 /* Diagnostics.swift */,
 				D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */,
 				C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */,
 				B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */,
@@ -289,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAD0C93F535178951529DEC4 /* AppDelegate.swift in Sources */,
+				1818B30EA853830D67396C22 /* Diagnostics.swift in Sources */,
 				3A99BB4F6783157BE95AFB7E /* EngineBridge.swift in Sources */,
 				51BD2A95DD40C27DFCF05753 /* MenuBarPanel.swift in Sources */,
 				808DFBBC44CA017C1E8D2D3F /* MenuRowViews.swift in Sources */,

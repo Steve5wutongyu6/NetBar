@@ -19,6 +19,7 @@ def oid(role: str) -> str:
 # (display path, group) for every file the app compiles or links.
 SOURCES = [
     ("NetBar/App/AppDelegate.swift", "App"),
+    ("NetBar/App/Diagnostics.swift", "App"),
     ("NetBar/App/EngineBridge.swift", "App"),
     ("NetBar/App/MenuBarPanel.swift", "App"),
     ("NetBar/App/MenuRowViews.swift", "App"),
