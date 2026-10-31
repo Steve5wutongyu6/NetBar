@@ -16,11 +16,11 @@ VERSION="${TAG#v}"
 
 ZIP_SHA="$(shasum -a 256 "${ZIP}" | cut -d' ' -f1)"
 
-# The source archive is a public GitHub endpoint; fetch it to hash it.
-SRC="$(mktemp -t netbar-src)"
-curl -fsSL "https://codeload.github.com/Steve5wutongyu6/NetBar/tar.gz/refs/tags/${TAG}" -o "${SRC}"
+# The source archive is published with the release rather than taken from
+# GitHub's on-demand tarballs, which are regenerated and not byte-stable.
+SRC="${ROOT}/dist/netbar-${TAG}-src.tar.gz"
+[ -f "${SRC}" ] || { echo "update-brew.sh: ${SRC} not found" >&2; exit 1; }
 SRC_SHA="$(shasum -a 256 "${SRC}" | cut -d' ' -f1)"
-rm -f "${SRC}"
 
 python3 - "${ROOT}" "${VERSION}" "${ZIP_SHA}" "${SRC_SHA}" <<'PY'
 import pathlib
@@ -34,7 +34,8 @@ lines = []
 for line in text.splitlines():
     if line.startswith("  url "):
         lines.append(
-            f'  url "https://github.com/Steve5wutongyu6/NetBar/archive/refs/tags/v{version}.tar.gz"'
+            f'  url "https://github.com/Steve5wutongyu6/NetBar/releases/download/v{version}/'
+            f'netbar-v{version}-src.tar.gz"'
         )
     elif line.startswith("  sha256 "):
         lines.append(f'  sha256 "{src_sha}"')

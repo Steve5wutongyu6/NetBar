@@ -1,8 +1,8 @@
 class Netbar < Formula
   desc "Menu bar Wi-Fi list with Personal Hotspot signal and battery"
   homepage "https://github.com/Steve5wutongyu6/NetBar"
-  url "https://github.com/Steve5wutongyu6/NetBar/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "75d229c452c8d0dfbefd838be919ecddb580b3005d512ae1283f305c50672fcc"
+  url "https://github.com/Steve5wutongyu6/NetBar/releases/download/v1.0.0/netbar-v1.0.0-src.tar.gz"
+  sha256 "6d2b1942f8c27e46b487feb433a208d8949fb9f14ea3707b77d7a7f95fef5493"
   license "MIT"
   head "https://github.com/Steve5wutongyu6/NetBar.git", branch: "main"
 
