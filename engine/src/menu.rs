@@ -11,6 +11,10 @@ use crate::model::{Cell, DetailKind, Input, Item, Network, Output, Peer, Role, S
 
 /// Wi-Fi bars shown for a signal strength, 0 through 4 (rule A).
 pub fn strength(rssi: i64) -> u8 {
+    // 0 means "not measured"; treating it as a reading would draw four bars.
+    if rssi >= 0 {
+        return 0;
+    }
     if rssi >= -60 {
         4
     } else if rssi >= -70 {

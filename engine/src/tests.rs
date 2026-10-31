@@ -67,6 +67,9 @@ fn strength_boundaries_cover_every_bar_count() {
     assert_eq!(menu::strength(-88), 1);
     assert_eq!(menu::strength(-89), 0);
     assert_eq!(menu::strength(-127), 0);
+    // No reading at all is not a perfect one.
+    assert_eq!(menu::strength(0), 0);
+    assert_eq!(menu::strength(12), 0);
 }
 
 // Rule B: radio off.
