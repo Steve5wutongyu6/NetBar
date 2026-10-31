@@ -290,11 +290,12 @@ private struct TrailingDetail: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// A Personal Hotspot is drawn with the Cellular glyph so it never reads as
-    /// an ordinary Wi-Fi network.
+    /// A Personal Hotspot is drawn with the Cellular glyph, filled from the bars
+    /// its host reports, so the row never reads as an ordinary Wi-Fi network.
     private var signalGlyph: NSImage {
         if item.detailKind == .appleHotspot {
-            return WiFiIcon.cellular(strength: Int(item.strength))
+            let bars = item.cellularSignal > 0 ? Int(item.cellularSignal) : Int(item.strength)
+            return WiFiIcon.cellular(strength: bars)
         }
         return WiFiIcon.wifi(strength: Int(item.strength))
     }

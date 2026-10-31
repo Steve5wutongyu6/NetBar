@@ -198,6 +198,130 @@ fn joined_hotspot_with_a_hidden_name_is_still_joined() {
     assert!(output.connected_is_hotspot);
 }
 
+/// Adds a Continuity report for a device name.
+fn with_peer(name: &str, label: &str, battery: i64, bars: i64) -> String {
+    format!(
+        ",\"peers\":[{{\"name\":\"{name}\",\"batteryPercent\":{battery},\
+\"networkLabel\":\"{label}\",\"signalBars\":{bars}}}]"
+    )
+}
+
+// The Cellular column comes from Continuity, not from the beacon.
+#[test]
+fn hotspot_row_takes_generation_battery_and_bars_from_the_continuity_report() {
+    let entries = format!(
+        "{},{}",
+        network("Phone", -58, ",\"personalHotspot\":true"),
+        network("Cafe", -62, "")
+    );
+    let text = request(true, None, &entries).replace(
+        "\"revealOther\":false",
+        &format!("\"revealOther\":false{}", with_peer("Phone", "5G", 75, 2)),
+    );
+    let output = render(&text);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    assert_eq!(hotspot[0].cell, Cell::FiveG);
+    assert_eq!(hotspot[0].battery, 75);
+    assert_eq!(hotspot[0].cellular_signal, 2);
+    // The Wi-Fi bars stay Wi-Fi bars, independent of the Cellular ones.
+    assert_eq!(hotspot[0].strength, 4);
+}
+
+// A connected hotspot reads its readings from the same report.
+#[test]
+fn joined_hotspot_reads_cellular_details_from_continuity() {
+    let text = request(true, Some("Phone"), &network("Phone", -55, "")).replace(
+        "\"revealOther\":false",
+        &format!(
+            "\"revealOther\":false,\"currentIsPersonalHotspot\":true{}",
+            with_peer("Phone", "4G", 64, 3)
+        ),
+    );
+    let output = render(&text);
+    assert_eq!(output.connected_cell, Cell::FourG);
+    assert_eq!(output.connected_battery, 64);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot[0].cellular_signal, 3);
+}
+
+// Without a report the row shows no Cellular detail rather than inventing one.
+#[test]
+fn hotspot_without_a_continuity_report_has_no_cellular_signal() {
+    let text = request(
+        true,
+        None,
+        &network("Phone", -58, ",\"personalHotspot\":true"),
+    );
+    let output = render(&text);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot[0].cellular_signal, 0);
+    assert_eq!(hotspot[0].cell, Cell::None);
+    assert_eq!(hotspot[0].battery, 0);
+}
+
+// With names hidden, a single hotspot and a single report are paired.
+#[test]
+fn a_sole_report_reaches_a_sole_hotspot_when_names_are_hidden() {
+    let text = request(
+        true,
+        None,
+        &network("Cafe", -54, ",\"personalHotspot\":true"),
+    )
+    .replace(
+        "\"connectedNameRedacted\":false",
+        "\"connectedNameRedacted\":true",
+    )
+    .replace("\"currentRSSI\":-50", "\"currentRSSI\":-54")
+    .replace(
+        "\"revealOther\":false",
+        &format!(
+            "\"revealOther\":false,\"currentIsPersonalHotspot\":true{}",
+            with_peer("吴同宇的iPhone", "4G", 75, 4)
+        ),
+    );
+    let output = render(&text);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    // The row keeps the name the scan gave it; only the details are paired.
+    assert_eq!(hotspot[0].title.as_deref(), Some("Cafe"));
+    assert_eq!(hotspot[0].cell, Cell::FourG);
+    assert_eq!(hotspot[0].battery, 75);
+    assert_eq!(hotspot[0].cellular_signal, 4);
+}
+
+// Two candidates are ambiguous, so nothing is paired by guesswork.
+#[test]
+fn ambiguous_reports_are_not_paired_when_names_are_hidden() {
+    let peers = ",\"peers\":[{\"name\":\"A\",\"networkLabel\":\"4G\",\"signalBars\":3},\
+{\"name\":\"B\",\"networkLabel\":\"5G\",\"signalBars\":2}]";
+    let text = request(
+        true,
+        None,
+        &network("Cafe", -54, ",\"personalHotspot\":true"),
+    )
+    .replace(
+        "\"connectedNameRedacted\":false",
+        "\"connectedNameRedacted\":true",
+    )
+    .replace(
+        "\"revealOther\":false",
+        &format!("\"revealOther\":false{peers}"),
+    );
+    let output = render(&text);
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot[0].cellular_signal, 0);
+}
+
+#[test]
+fn network_labels_map_to_the_indicator_the_menu_draws() {
+    assert_eq!(menu::cell_from_label(Some("5G")), Cell::FiveG);
+    assert_eq!(menu::cell_from_label(Some("4G")), Cell::FourG);
+    assert_eq!(menu::cell_from_label(Some("LTE")), Cell::FourG);
+    assert_eq!(menu::cell_from_label(Some("3G")), Cell::None);
+    assert_eq!(menu::cell_from_label(None), Cell::None);
+}
+
 // Rule E.1: the header only exists when a hotspot does.
 #[test]
 fn hotspot_header_is_absent_without_a_hotspot() {

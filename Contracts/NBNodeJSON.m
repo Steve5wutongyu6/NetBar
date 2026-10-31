@@ -17,6 +17,12 @@ static NSString *const NBKeyInterfaceName = @"interfaceName";
 static NSString *const NBKeyCurrentRSSI = @"currentRSSI";
 static NSString *const NBKeyScanning = @"scanning";
 static NSString *const NBKeyRevealOther = @"revealOther";
+static NSString *const NBKeyPeers = @"peers";
+static NSString *const NBKeyPeerName = @"name";
+static NSString *const NBKeyPeerBattery = @"batteryPercent";
+static NSString *const NBKeyPeerNetworkLabel = @"networkLabel";
+static NSString *const NBKeyPeerSignal = @"signalBars";
+static NSString *const NBKeyCellularSignal = @"cellularSignal";
 static NSString *const NBKeyCurrentIsPersonalHotspot = @"currentIsPersonalHotspot";
 static NSString *const NBKeyCurrentHotspotNetwork = @"currentHotspotNetwork";
 static NSString *const NBKeyCurrentHotspotBattery = @"currentHotspotBattery";
@@ -78,6 +84,30 @@ static NSData *NBJSONData(id object)
 
 #pragma mark - Input
 
+@implementation NBHotspotPeerInfo
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    NBHotspotPeerInfo *copy = [[NBHotspotPeerInfo allocWithZone:zone] init];
+    copy.name = self.name;
+    copy.batteryPercent = self.batteryPercent;
+    copy.networkLabel = self.networkLabel;
+    copy.signalBars = self.signalBars;
+    return copy;
+}
+
+- (NSDictionary *)jsonObject
+{
+    return @{
+        NBKeyPeerName: self.name,
+        NBKeyPeerBattery: @(self.batteryPercent),
+        NBKeyPeerNetworkLabel: self.networkLabel ?: NSNull.null,
+        NBKeyPeerSignal: @(self.signalBars),
+    };
+}
+
+@end
+
 @implementation NBEngineNetwork
 
 - (id)copyWithZone:(NSZone *)zone
@@ -125,6 +155,7 @@ static NSData *NBJSONData(id object)
         _schemaVersion = NBEngineSchemaVersion;
         _networks = @[];
         _preferredNetworks = @[];
+        _peers = @[];
     }
     return self;
 }
@@ -145,6 +176,7 @@ static NSData *NBJSONData(id object)
     copy.currentHotspotNetwork = self.currentHotspotNetwork;
     copy.currentHotspotBattery = self.currentHotspotBattery;
     copy.networks = self.networks;
+    copy.peers = self.peers;
     return copy;
 }
 
@@ -154,8 +186,13 @@ static NSData *NBJSONData(id object)
     for (NBEngineNetwork *network in self.networks) {
         [networks addObject:[network jsonObject]];
     }
+    NSMutableArray *peers = [NSMutableArray arrayWithCapacity:self.peers.count];
+    for (NBHotspotPeerInfo *peer in self.peers) {
+        [peers addObject:[peer jsonObject]];
+    }
     NSDictionary *object = @{
         NBKeyPreferredNetworks: self.preferredNetworks,
+        NBKeyPeers: peers,
         NBKeySchemaVersion: @(self.schemaVersion),
         NBKeyPowerOn: @(self.powerOn),
         NBKeyCurrentSSID: self.currentSSID ?: NSNull.null,
@@ -196,6 +233,7 @@ static NSData *NBJSONData(id object)
         _isJoined = NBFlag(object[NBKeyIsJoined]);
         _detailKind = (NBDetailKind)NBInteger(object[NBKeyDetailKind]);
         _cell = (NBCellIndicator)NBInteger(object[NBKeyCell]);
+        _cellularSignal = NBInteger(object[NBKeyCellularSignal]);
         _battery = NBInteger(object[NBKeyBattery]);
         _strength = NBInteger(object[NBKeyStrength]);
         _redacted = NBFlag(object[NBKeyRedacted]);

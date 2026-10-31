@@ -41,6 +41,18 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
     NBCellIndicatorFiveG = 2,
 };
 
+/// A nearby Personal Hotspot host, as Continuity reports it.
+@interface NBHotspotPeerInfo : NSObject <NSCopying>
+/// Device name, which is the hotspot's SSID.
+@property (nonatomic, copy) NSString *name;
+/// Battery percentage, 0 when unknown.
+@property (nonatomic) NSInteger batteryPercent;
+/// "4G", "5G" and so on, nil when unknown.
+@property (nonatomic, copy, nullable) NSString *networkLabel;
+/// Signal bars, 0 through 4.
+@property (nonatomic) NSInteger signalBars;
+@end
+
 /// A network as the bridge reports it. Mirrors the JSON object the app sends.
 @interface NBEngineNetwork : NSObject <NSCopying>
 @property (nonatomic, copy, nullable) NSString *ssid;
@@ -77,6 +89,9 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic) NBHotspotNetwork currentHotspotNetwork;
 @property (nonatomic) NSInteger currentHotspotBattery;
 @property (nonatomic) NSInteger currentStrength;
+/// Nearby sharing devices, decoded from the Continuity channel the system uses
+/// for the Cellular details of a Personal Hotspot.
+@property (nonatomic, copy) NSArray<NBHotspotPeerInfo *> *peers;
 @property (nonatomic, copy) NSArray<NBEngineNetwork *> *networks;
 
 /// Wire representation consumed by `netbar_node_json`.
@@ -99,6 +114,8 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic) NSInteger battery;
 /// Wi-Fi bars, 0 through 4.
 @property (nonatomic) NSInteger strength;
+/// Cellular bars of a Personal Hotspot host, 0 through 4; 0 when unknown.
+@property (nonatomic) NSInteger cellularSignal;
 @property (nonatomic) BOOL redacted;
 @end
 

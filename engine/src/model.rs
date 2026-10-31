@@ -26,6 +26,31 @@ pub struct Network {
     pub security: i64,
 }
 
+/// A nearby Personal Hotspot host, as the system's Continuity channel reports it:
+/// battery, generation and signal for a hotspot the Wi-Fi beacon knows nothing about.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Peer {
+    pub name: String,
+    pub battery_percent: i64,
+    pub network_label: Option<String>,
+    pub signal_bars: i64,
+}
+
+impl Peer {
+    fn decode(value: &super::json::Value) -> Option<Self> {
+        let name = string_field(value, "name")?;
+        if name.trim().is_empty() {
+            return None;
+        }
+        Some(Self {
+            name,
+            battery_percent: int_field(value, "batteryPercent").clamp(0, 100),
+            network_label: string_field(value, "networkLabel"),
+            signal_bars: int_field(value, "signalBars").clamp(0, 4),
+        })
+    }
+}
+
 /// The whole request.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Input {
@@ -45,6 +70,8 @@ pub struct Input {
     pub current_is_personal_hotspot: bool,
     pub current_hotspot_network: i64,
     pub current_hotspot_battery: i64,
+    /// Nearby sharing devices, matched to hotspot rows by name.
+    pub peers: Vec<Peer>,
     pub networks: Vec<Network>,
 }
 
@@ -63,6 +90,7 @@ impl Default for Input {
             current_is_personal_hotspot: false,
             current_hotspot_network: 0,
             current_hotspot_battery: 0,
+            peers: Vec::new(),
             networks: Vec::new(),
         }
     }
@@ -93,6 +121,10 @@ impl Input {
             current_is_personal_hotspot: bool_field(value, "currentIsPersonalHotspot"),
             current_hotspot_network: int_field(value, "currentHotspotNetwork"),
             current_hotspot_battery: int_field(value, "currentHotspotBattery"),
+            peers: match value.get("peers").and_then(Value::as_array) {
+                Some(entries) => entries.iter().filter_map(Peer::decode).collect(),
+                None => Vec::new(),
+            },
             networks: match value.get("networks").and_then(Value::as_array) {
                 Some(entries) => entries.iter().map(Network::decode).collect(),
                 None => Vec::new(),
@@ -196,6 +228,8 @@ pub struct Item {
     pub cell: Cell,
     pub battery: u8,
     pub strength: u8,
+    /// Cellular bars of the hotspot's host, 0 through 4; 0 when unknown.
+    pub cellular_signal: u8,
     pub redacted: bool,
 }
 
@@ -215,6 +249,7 @@ impl Item {
             cell: Cell::None,
             battery: 0,
             strength: 0,
+            cellular_signal: 0,
             redacted: false,
         }
     }
@@ -235,6 +270,7 @@ impl Item {
             cell: Cell::None,
             battery: 0,
             strength: 0,
+            cellular_signal: 0,
             redacted: false,
         }
     }
@@ -334,6 +370,8 @@ impl Item {
         out.push_str(&self.battery.to_string());
         out.push_str(",\"strength\":");
         out.push_str(&self.strength.to_string());
+        out.push_str(",\"cellularSignal\":");
+        out.push_str(&self.cellular_signal.to_string());
         out.push_str(",\"redacted\":");
         out.push_str(bool_text(self.redacted));
         out.push('}');

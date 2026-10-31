@@ -104,6 +104,33 @@ func lockedNetworkKeepsLock() throws {
 }
 
 @MainActor
+@Test("Continuity reports reach the hotspot row")
+func continuityReportsReachTheRow() throws {
+    let input = NBEngineInput()
+    input.powerOn = true
+    input.interfaceName = "en0"
+    input.currentSSID = "Phone"
+    input.currentRSSI = -55
+    input.currentIsPersonalHotspot = true
+
+    let peer = NBHotspotPeerInfo()
+    peer.name = "Phone"
+    peer.batteryPercent = 75
+    peer.networkLabel = "5G"
+    peer.signalBars = 3
+    input.peers = [peer]
+
+    let output = EngineBridge.render(input)
+    #expect(output.connectedCell == .fiveG)
+    #expect(output.connectedBattery == 75)
+    let hotspot = try #require(output.items.first { $0.section == .hotspot && $0.role == .network })
+    #expect(hotspot.cell == .fiveG)
+    #expect(hotspot.battery == 75)
+    #expect(hotspot.cellularSignal == 3)
+    #expect(hotspot.detailKind == .appleHotspot)
+}
+
+@MainActor
 @Test("A capture carries what the radio knows about the joined hotspot")
 func snapshotCarriesConnectedHotspotFacts() throws {
     let snapshot = NBSnapshot()

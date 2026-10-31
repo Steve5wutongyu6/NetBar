@@ -122,6 +122,8 @@ final class WiFiStore {
             // Registers the app with Location Services on the first capture, so
             // the authorization prompt can appear at all.
             _ = NBLocationAuthorizer.shared()
+            // Browsing is what fills in the Cellular column of a hotspot.
+            NBHotspotMonitor.shared().start()
             let preferred = NBWiFiBridge.preferredNetworkNames()
             let snapshot = await Self.capture(scan: scan)
             if scan {
@@ -234,6 +236,16 @@ final class WiFiStore {
         input.currentIsPersonalHotspot = snapshot.currentIsPersonalHotspot
         input.currentHotspotNetwork = snapshot.currentHotspotNetwork
         input.currentHotspotBattery = snapshot.currentHotspotBattery
+        // Continuity knows the Cellular side of a Personal Hotspot; the Wi-Fi
+        // beacon never carries it.
+        input.peers = NBHotspotMonitor.shared().peers.map { peer in
+            let info = NBHotspotPeerInfo()
+            info.name = peer.name
+            info.batteryPercent = peer.batteryPercent
+            info.networkLabel = peer.networkLabel
+            info.signalBars = peer.signalBars
+            return info
+        }
         input.networks = snapshot.networks.map { scanned in
             let network = NBEngineNetwork()
             network.ssid = scanned.ssid

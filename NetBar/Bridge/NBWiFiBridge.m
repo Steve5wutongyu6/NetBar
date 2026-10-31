@@ -85,6 +85,19 @@ static CWInterface *_Nullable NBResolveInterface(void) {
 
 /// Security classification, strongest first so a transitional network reads as its modern tier.
 /// WPA3 before WPA2 before WPA before WEP; enterprise suites fold into `NBWiFiSecurityEnterprise`.
+/// Whether CoreWLAN itself considers this network a Personal Hotspot.
+///
+/// `-[CWNetwork isPersonalHotspot]` is not in the public headers, so it is looked
+/// up by selector; when a future SDK drops it the beacon parse still answers.
+static BOOL NBHotspotIsPersonalHotspot(CWNetwork *network) {
+    SEL selector = NSSelectorFromString(@"isPersonalHotspot");
+    if (![network respondsToSelector:selector]) {
+        return NO;
+    }
+    BOOL (*implementation)(id, SEL) = (BOOL (*)(id, SEL))[network methodForSelector:selector];
+    return implementation(network, selector);
+}
+
 static NBWiFiSecurity NBWiFiSecurityFromNetwork(CWNetwork *network) {
     if ([network supportsSecurity:kCWSecurityWPA3Personal] || [network supportsSecurity:kCWSecurityWPA3Enterprise]
         || [network supportsSecurity:kCWSecurityWPA3Transition] || [network supportsSecurity:kCWSecurityOWE]
@@ -177,7 +190,10 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     scanned.known = serviceName != nil || isCurrentNetwork;
 
     NBHotspotInfo hotspot = NBHotspotParseInformationElements(network.informationElementData);
-    scanned.personalHotspot = hotspot.isPersonalHotspot;
+    // CoreWLAN knows the answer from the driver's own parsing of the iOS
+    // information element; the hand-rolled beacon parse is only a fallback for
+    // firmware that marks a hotspot differently.
+    scanned.personalHotspot = NBHotspotIsPersonalHotspot(network) || hotspot.isPersonalHotspot;
     scanned.hotspotNetwork = hotspot.network;
     scanned.hotspotBattery = hotspot.batteryPercent;
     scanned.carriesHotspotInformation = hotspot.carriesHotspotInformation;

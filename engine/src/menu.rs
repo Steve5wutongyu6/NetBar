@@ -7,7 +7,7 @@
 //! Nothing here touches CoreWLAN or AppKit, so the whole policy is unit-testable
 //! from plain JSON.
 
-use crate::model::{Cell, DetailKind, Input, Item, Network, Output, Role, Section};
+use crate::model::{Cell, DetailKind, Input, Item, Network, Output, Peer, Role, Section};
 
 /// Wi-Fi bars shown for a signal strength, 0 through 4 (rule A).
 pub fn strength(rssi: i64) -> u8 {
@@ -102,6 +102,22 @@ pub fn build(input: &Input) -> Output {
         output.connected_cell = Cell::from_i64(input.current_hotspot_network);
         output.connected_battery = input.current_hotspot_battery;
     }
+    let connected_peer = peer_for(&input.peers, input.current_ssid.as_deref()).or_else(|| {
+        sole_peer(
+            &input.peers,
+            input,
+            collapsed.iter().filter(|n| n.personal_hotspot).count(),
+        )
+    });
+    if let Some(peer) = connected_peer {
+        let cell = cell_from_label(peer.network_label.as_deref());
+        if cell != Cell::None {
+            output.connected_cell = cell;
+        }
+        if peer.battery_percent > 0 {
+            output.connected_battery = peer.battery_percent;
+        }
+    }
 
     // Rule E.1: Personal Hotspots get their own section, whether or not they are
     // saved, and always keep their Cellular/Battery detail.
@@ -171,6 +187,11 @@ pub fn build(input: &Input) -> Output {
             item.cell = Cell::from_i64(network.hotspot_network);
             item.battery = clamp_battery(network.hotspot_battery);
             item.is_joined = is_joined_name(input, named.as_deref().unwrap_or_default());
+            apply_peer(
+                &mut item,
+                peer_for(&input.peers, named.as_deref())
+                    .or_else(|| sole_peer(&input.peers, input, hotspots.len())),
+            );
             output.items.push(item);
         }
     }
@@ -369,6 +390,49 @@ fn fill_signal(item: &mut Item, network: &Network) {
 
 fn clamp_battery(percent: i64) -> u8 {
     percent.clamp(0, 100) as u8
+}
+
+/// Turns the system's own label into the enum the menu draws.
+pub fn cell_from_label(label: Option<&str>) -> Cell {
+    match label.map(str::trim) {
+        Some(text) if text.eq_ignore_ascii_case("5G") => Cell::FiveG,
+        Some(text) if text.eq_ignore_ascii_case("4G") || text.eq_ignore_ascii_case("LTE") => {
+            Cell::FourG
+        }
+        _ => Cell::None,
+    }
+}
+
+/// The Continuity report for a hotspot, matched to a row by name.
+fn peer_for<'a>(peers: &'a [Peer], ssid: Option<&str>) -> Option<&'a Peer> {
+    let name = normalize_name(ssid?);
+    peers.iter().find(|peer| normalize_name(&peer.name) == name)
+}
+
+/// The report for the only hotspot on offer.
+///
+/// When macOS withholds names nothing can be matched by name, but one joined
+/// hotspot plus one reported device is unambiguous, so the pair is used.
+fn sole_peer<'a>(peers: &'a [Peer], input: &Input, hotspot_rows: usize) -> Option<&'a Peer> {
+    let unnamed = input.connected_name_redacted || input.current_ssid.is_none();
+    if unnamed && peers.len() == 1 && hotspot_rows == 1 {
+        return peers.first();
+    }
+    None
+}
+
+/// Applies what Continuity knows to a hotspot row: generation, battery and the
+/// Cellular bars, none of which the Wi-Fi beacon carries.
+fn apply_peer(item: &mut Item, peer: Option<&Peer>) {
+    let Some(peer) = peer else { return };
+    let cell = cell_from_label(peer.network_label.as_deref());
+    if cell != Cell::None {
+        item.cell = cell;
+    }
+    if peer.battery_percent > 0 {
+        item.battery = clamp_battery(peer.battery_percent);
+    }
+    item.cellular_signal = u8::try_from(peer.signal_bars.clamp(0, 4)).unwrap_or(0);
 }
 
 impl Network {

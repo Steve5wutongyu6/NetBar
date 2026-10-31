@@ -45,6 +45,21 @@ enum Diagnostics {
                 lines.append("  elements=\(elements(in: ie))")
             }
         }
+        // The Cellular column of a hotspot comes from Continuity, so a dump
+        // without it would not explain what the menu shows.
+        let monitor = NBHotspotMonitor.shared()
+        monitor.start()
+        let deadline = Date().addingTimeInterval(3)
+        while monitor.peers.isEmpty && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        let peers = monitor.peers
+        lines.append("continuityPeers=\(peers.count)")
+        for peer in peers {
+            lines.append("  peer name=\(peer.name) battery=\(peer.batteryPercent) "
+                + "network=\(peer.networkLabel ?? "?") bars=\(peer.signalBars)")
+        }
+        monitor.stop()
         return write(lines, to: path)
     }
 
