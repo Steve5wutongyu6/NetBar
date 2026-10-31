@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# Scripts/build-rust.sh — builds the Rust engine per architecture and merges the
-# static libraries into one universal archive under engine/target/universal/.
+# Scripts/build-rust.sh — builds the Rust engine and places the static library
+# under engine/target/universal/<profile>/libnetbar_engine.a.
 #
-# Called by the Xcode "Build Rust Engine" phase (env: ARCHS, NETBAR_ENGINE_PROFILE_DIR)
-# and by Scripts/build.sh (env: NETBAR_PROFILE=debug|release).
+# Called by the Xcode "Build Rust Engine" phase and by Scripts/build.sh
+# (env: NETBAR_PROFILE=debug|release).
+#
+# Two toolchains are supported:
+#   * rustup   — builds every architecture and merges them with lipo
+#   * plain cargo (Homebrew's rust) — builds for the host architecture only,
+#     which is all a source install needs
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -19,39 +24,49 @@ fi
 ARCHS_TO_BUILD="${NETBAR_ENGINE_ARCHS:-${ARCHS:-arm64 x86_64}}"
 
 command -v cargo >/dev/null 2>&1 || {
-  echo "build-rust: cargo not found; install Rust (https://rustup.rs)" >&2
+  echo "build-rust: cargo not found; install Rust (https://rustup.rs or brew install rust)" >&2
   exit 1
 }
 
-slices=()
-for arch in ${ARCHS_TO_BUILD}; do
-  case "${arch}" in
-    arm64|arm64e) triple=aarch64-apple-darwin ;;
-    x86_64)       triple=x86_64-apple-darwin ;;
-    *)            echo "build-rust: unsupported arch ${arch}" >&2; exit 1 ;;
-  esac
-  if ! rustup target list --installed 2>/dev/null | grep -qx "${triple}"; then
-    echo "build-rust: installing rust target ${triple}" >&2
-    rustup target add "${triple}" >/dev/null 2>&1 || {
-      echo "build-rust: cannot install target ${triple} (offline?)" >&2
-      exit 1
-    }
-  fi
-  if [ "${PROFILE}" = release ]; then
-    cargo build --release --locked --manifest-path "${ROOT}/engine/Cargo.toml" \
-      --target "${triple}" >&2
-  else
-    cargo build --locked --manifest-path "${ROOT}/engine/Cargo.toml" \
-      --target "${triple}" >&2
-  fi
-  slices+=("${ROOT}/engine/target/${triple}/${PROFILE}/libnetbar_engine.a")
-done
-
 OUT="${ROOT}/engine/target/universal/${PROFILE}"
 mkdir -p "${OUT}"
-if [ "${#slices[@]}" -eq 1 ]; then
-  cp "${slices[0]}" "${OUT}/libnetbar_engine.a"
-else
-  lipo -create -output "${OUT}/libnetbar_engine.a" "${slices[@]}"
+
+profile_flag=()
+if [ "${PROFILE}" = release ]; then
+  profile_flag=(--release)
 fi
+
+if command -v rustup >/dev/null 2>&1; then
+  slices=()
+  for arch in ${ARCHS_TO_BUILD}; do
+    case "${arch}" in
+      arm64|arm64e) triple=aarch64-apple-darwin ;;
+      x86_64)       triple=x86_64-apple-darwin ;;
+      *)            echo "build-rust: unsupported arch ${arch}" >&2; exit 1 ;;
+    esac
+    if ! rustup target list --installed 2>/dev/null | grep -qx "${triple}"; then
+      echo "build-rust: installing rust target ${triple}" >&2
+      rustup target add "${triple}" >/dev/null 2>&1 || {
+        echo "build-rust: cannot install target ${triple} (offline?)" >&2
+        exit 1
+      }
+    fi
+    cargo build "${profile_flag[@]}" --locked --manifest-path "${ROOT}/engine/Cargo.toml" \
+      --target "${triple}" >&2
+    slices+=("${ROOT}/engine/target/${triple}/${PROFILE}/libnetbar_engine.a")
+  done
+
+  if [ "${#slices[@]}" -eq 1 ]; then
+    cp "${slices[0]}" "${OUT}/libnetbar_engine.a"
+  else
+    lipo -create -output "${OUT}/libnetbar_engine.a" "${slices[@]}"
+  fi
+else
+  # No rustup: one host-architecture build. A universal release comes from the
+  # rustup toolchain, which is what CI and the published cask use.
+  echo "build-rust: no rustup, building for the host architecture" >&2
+  cargo build "${profile_flag[@]}" --locked --manifest-path "${ROOT}/engine/Cargo.toml" >&2
+  cp "${ROOT}/engine/target/${PROFILE}/libnetbar_engine.a" "${OUT}/libnetbar_engine.a"
+fi
+
 echo "build-rust: ${OUT}/libnetbar_engine.a" >&2
