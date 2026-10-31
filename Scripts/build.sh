@@ -7,6 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+mkdir -p "${ROOT}/build"
 CONFIG="${CONFIG:-Debug}"
 DO_TEST=0
 for arg in "$@"; do

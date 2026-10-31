@@ -6,6 +6,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+mkdir -p "${ROOT}/build"
 
 echo "==> engine tests" >&2
 cargo test --locked --manifest-path "${ROOT}/engine/Cargo.toml" >&2
