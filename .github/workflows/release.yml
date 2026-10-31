@@ -102,16 +102,13 @@ jobs:
           NETBAR_ALLOW_OLDER_SDK: '1'
         run: Scripts/package.sh "${GITHUB_REF_NAME}"
 
-      - name: Update Homebrew files
+      - name: Update Homebrew cask
         env:
           NETBAR_ALLOW_OLDER_SDK: '1'
         run: |
           set -euo pipefail
           Scripts/update-brew.sh "${GITHUB_REF_NAME}" "dist/NetBar-${GITHUB_REF_NAME}.zip"
-          ruby -c Formula/netbar.rb
           ruby -c Casks/netbar.rb
-          # Distinct names: the formula and the cask are both netbar.rb.
-          cp Formula/netbar.rb "dist/netbar-${GITHUB_REF_NAME}-formula.rb"
           cp Casks/netbar.rb "dist/netbar-${GITHUB_REF_NAME}-cask.rb"
 
       - name: Publish release
@@ -121,7 +118,6 @@ jobs:
             dist/*.zip
             dist/*-src.tar.gz
             dist/SHA256SUMS.txt
-            dist/*-formula.rb
             dist/*-cask.rb
           generate_release_notes: true
           draft: false
