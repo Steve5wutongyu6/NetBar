@@ -42,14 +42,16 @@ enum Diagnostics {
             cellular=\(info.network.rawValue) battery=\(info.batteryPercent) carries=\(info.carriesHotspotInformation)
             """)
             if !ie.isEmpty {
-                lines.append("  appleElements=\(appleElements(in: ie))")
+                lines.append("  elements=\(elements(in: ie))")
             }
         }
         return write(lines, to: path)
     }
 
-    /// A compact description of every Apple vendor element: subtype and body hex.
-    private static func appleElements(in data: Data) -> String {
+    /// Every vendor-specific element, with its OUI and payload. The Cellular
+    /// indicator is not guaranteed to live in an Apple OUI element, so nothing
+    /// vendor-specific is filtered out here.
+    private static func elements(in data: Data) -> String {
         var found: [String] = []
         var offset = 0
         while offset + 2 <= data.count {
@@ -59,12 +61,9 @@ enum Diagnostics {
             guard bodyStart + length <= data.count else { break }
             if identifier == 221, length >= 4 {
                 let body = data.subdata(in: bodyStart..<(bodyStart + length))
-                let oui = [body[0], body[1], body[2]]
-                if oui == [0x00, 0x50, 0xF2] {
-                    let subtype = body[3]
-                    let payload = body.dropFirst(4).map { String(format: "%02x", $0) }.joined(separator: " ")
-                    found.append(String(format: "type=0x%02x[%@]", subtype, payload))
-                }
+                let oui = String(format: "%02x:%02x:%02x", body[0], body[1], body[2])
+                let payload = body.map { String(format: "%02x", $0) }.joined(separator: " ")
+                found.append("oui=\(oui)[\(payload)]")
             }
             offset = bodyStart + length
         }
