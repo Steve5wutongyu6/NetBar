@@ -51,6 +51,9 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic, copy, nullable) NSString *networkLabel;
 /// Signal bars, 0 through 4.
 @property (nonatomic) NSInteger signalBars;
+
+/// Wire representation of this peer.
+- (NSDictionary *)jsonObject;
 @end
 
 /// A network as the bridge reports it. Mirrors the JSON object the app sends.
@@ -68,6 +71,9 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic) NBHotspotNetwork hotspotNetwork;
 /// Battery percentage advertised by an Apple hotspot, 0 when unknown.
 @property (nonatomic) NSInteger hotspotBattery;
+
+/// Wire representation of this network.
+- (NSDictionary *)jsonObject;
 @end
 
 @interface NBEngineInput : NSObject <NSCopying>
@@ -88,7 +94,6 @@ typedef NS_ENUM(NSInteger, NBCellIndicator) {
 @property (nonatomic) BOOL currentIsPersonalHotspot;
 @property (nonatomic) NBHotspotNetwork currentHotspotNetwork;
 @property (nonatomic) NSInteger currentHotspotBattery;
-@property (nonatomic) NSInteger currentStrength;
 /// Nearby sharing devices, decoded from the Continuity channel the system uses
 /// for the Cellular details of a Personal Hotspot.
 @property (nonatomic, copy) NSArray<NBHotspotPeerInfo *> *peers;

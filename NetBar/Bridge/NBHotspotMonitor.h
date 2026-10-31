@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NBHotspotMonitor : NSObject
 
-+ (instancetype)sharedMonitor;
++ (instancetype)shared;
 
 /// Devices seen by the current browse, strongest first. Empty when the monitor
 /// is not running or nothing is in range.

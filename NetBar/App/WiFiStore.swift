@@ -30,21 +30,16 @@ final class WiFiStore {
     /// Incremented on every applied menu, so the panel knows to re-fit its size.
     private(set) var revision = 0
 
-    /// The user unfolded "Other Networks".
-    var revealsOther = false {
-        didSet {
-            guard revealsOther != oldValue else { return }
-            // Unfolding is a view change: re-render the same capture.
-            rerender()
-        }
-    }
+    /// The user unfolded "Other Networks". Unfolding is a view change, so it
+    /// re-renders the same capture; that render is awaited by the caller.
+    private(set) var revealsOther = false
 
     let source: Source
     private var lastSnapshot: NBSnapshot?
     /// Networks from the last full scan. A state-only refresh reuses them, so
     /// reading the connection state never empties the list.
     private var scannedNetworks: [NBScannedNetwork] = []
-    private var hotspotState = HotspotState()
+    private var scanState = ScanState()
     private var lastInput: NBEngineInput?
 
     init(source: Source = .live) {
@@ -65,7 +60,14 @@ final class WiFiStore {
     /// The answer can take a while, and a suppressed prompt may never arrive, so
     /// this does not wait: the authorization notification brings the new state.
     func requestNameAccess() {
-        NBLocationAuthorizer.shared().requestAuthorization(completion: nil)
+        // The answer arrives on the main thread; refreshing here covers a missed
+        // notification, and the notification covers an answer we were not waiting for.
+        NBLocationAuthorizer.shared().requestAuthorization { [weak self] authorization in
+            guard authorization == .authorized else { return }
+            Task { @MainActor in
+                await self?.refresh(scan: true)
+            }
+        }
     }
 
     /// Re-reads the radio after the user changed the authorization.
@@ -116,7 +118,7 @@ final class WiFiStore {
     private func load(scan: Bool) async {
         switch source {
         case .fixture(let url):
-            apply(fixtureInput(at: url))
+            renderAndApplySynchronously(fixtureInput(at: url))
         case .live:
             isScanning = true
             defer { isScanning = false }
@@ -129,54 +131,84 @@ final class WiFiStore {
             let snapshot = await Self.capture(scan: scan)
             if scan {
                 scannedNetworks = snapshot.networks
-                hotspotState = Self.hotspotState(of: snapshot)
+                scanState = Self.scanState(of: snapshot)
             } else {
-                // The connection state changed, the radio's neighbourhood did not.
+                // The connection state changed, the radio's neighbourhood did not,
+                // so everything a scan had established carries over.
                 snapshot.networks = scannedNetworks
-                // Hotspot metadata also comes from the scan, so it carries over.
-                Self.restore(hotspotState, into: snapshot)
+                Self.restore(scanState, into: snapshot)
             }
             lastSnapshot = snapshot
             let input = Self.input(from: snapshot, preferred: preferred)
-            apply(input)
+            await renderAndApply(input)
         }
     }
 
-    /// What a full scan told us about the joined network's hotspot status.
-    private struct HotspotState {
+    /// What a full scan established and a state-only capture cannot know.
+    private struct ScanState {
         var isPersonalHotspot = false
         var isApplePersonalHotspot = false
         var network: NBHotspotNetwork = .networkUnknown
         var battery = 0
+        var namesAvailable = true
+        var namesUnavailableReason: String?
+        var namesAvailabilityKnown = false
     }
 
-    private static func hotspotState(of snapshot: NBSnapshot) -> HotspotState {
-        HotspotState(
+    private static func scanState(of snapshot: NBSnapshot) -> ScanState {
+        ScanState(
             isPersonalHotspot: snapshot.currentIsPersonalHotspot,
             isApplePersonalHotspot: snapshot.currentIsApplePersonalHotspot,
             network: snapshot.currentHotspotNetwork,
-            battery: snapshot.currentHotspotBattery
+            battery: snapshot.currentHotspotBattery,
+            namesAvailable: snapshot.namesAvailable,
+            namesUnavailableReason: snapshot.namesUnavailableReason,
+            namesAvailabilityKnown: snapshot.namesAvailabilityKnown
         )
     }
 
-    private static func restore(_ state: HotspotState, into snapshot: NBSnapshot) {
+    private static func restore(_ state: ScanState, into snapshot: NBSnapshot) {
         snapshot.currentIsPersonalHotspot = state.isPersonalHotspot
         snapshot.currentIsApplePersonalHotspot = state.isApplePersonalHotspot
         snapshot.currentHotspotNetwork = state.network
         snapshot.currentHotspotBattery = state.battery
+        snapshot.namesAvailable = state.namesAvailable
+        snapshot.namesUnavailableReason = state.namesUnavailableReason
+        snapshot.namesAvailabilityKnown = state.namesAvailabilityKnown
     }
 
     /// Re-renders the last capture, e.g. after the user unfolded the list.
-    func rerender() {
+    /// Unfolds or folds the "Other Networks" list.
+    func setRevealsOther(_ value: Bool) async {
+        guard value != revealsOther else { return }
+        revealsOther = value
         guard let lastInput else { return }
-        apply(lastInput)
+        await renderAndApply(lastInput)
     }
 
-    private func apply(_ input: NBEngineInput?) {
+    /// Re-renders the last capture, e.g. after the list changed shape.
+    func rerender() async {
+        guard let lastInput else { return }
+        await renderAndApply(lastInput)
+    }
+
+    /// Renders off the main thread, then applies the result on it.
+    private func renderAndApply(_ input: NBEngineInput) async {
+        input.revealOther = revealsOther
+        let rendered = await EngineBridge.render(input)
+        apply(input, rendered)
+    }
+
+    /// The synchronous form, for fixtures and snapshot rendering, where no run
+    /// loop exists to await on.
+    private func renderAndApplySynchronously(_ input: NBEngineInput?) {
         guard let input else { return }
         input.revealOther = revealsOther
+        apply(input, EngineBridge.renderSynchronously(input))
+    }
+
+    private func apply(_ input: NBEngineInput, _ rendered: NBEngineOutput) {
         lastInput = input
-        let rendered = EngineBridge.render(input)
         output = rendered
         revision += 1
         statusTitle = rendered.statusTitle
@@ -187,21 +219,27 @@ final class WiFiStore {
         strength = Int(rendered.connectedStrength)
         if let snapshot = lastSnapshot {
             powerOn = snapshot.powerOn
-            namesUnavailable = !snapshot.namesAvailable
+            // Only a scan can answer this; until one has run, the redaction of the
+            // joined name is the best evidence there is.
+            if snapshot.namesAvailabilityKnown {
+                namesUnavailable = !snapshot.namesAvailable
+            }
         }
     }
 
-    /// Renders an engine request directly. Used by snapshot rendering and tests
-    /// to lay out a menu that no capture produced.
+#if DEBUG
+    /// Renders an engine request directly, for tests that need a menu no capture
+    /// produced. Debug builds only: nothing in the app uses it.
     func applyForTesting(_ input: NBEngineInput) {
-        apply(input)
+        renderAndApplySynchronously(input)
     }
+#endif
 
     /// Hydrates a fixture capture synchronously, for snapshot rendering where no
     /// run loop is available yet.
     func loadFixtureSynchronously() {
         guard case .fixture(let url) = source else { return }
-        apply(fixtureInput(at: url))
+        renderAndApplySynchronously(fixtureInput(at: url))
     }
 
     private func fixtureInput(at url: URL) -> NBEngineInput? {
@@ -293,5 +331,9 @@ final class WiFiStore {
     }
 }
 
+// Both models are filled on one thread and then handed over: a snapshot is
+// written by the capture queue before it crosses to the main actor, and an engine
+// reply is decoded on the calling thread before it is used. Neither is mutated
+// after that hand-off, which is what the unchecked conformance asserts.
 extension NBSnapshot: @unchecked Sendable {}
 extension NBEngineOutput: @unchecked Sendable {}

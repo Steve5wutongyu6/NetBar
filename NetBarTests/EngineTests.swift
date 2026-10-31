@@ -120,7 +120,7 @@ func continuityReportsReachTheRow() throws {
     peer.signalBars = 3
     input.peers = [peer]
 
-    let output = EngineBridge.render(input)
+    let output = EngineBridge.renderSynchronously(input)
     #expect(output.connectedCell == .fiveG)
     #expect(output.connectedBattery == 75)
     let hotspot = try #require(output.items.first { $0.section == .hotspot && $0.role == .network })
@@ -159,7 +159,7 @@ func stateRefreshKeepsHotspotVerdict() throws {
     let laterInput = WiFiStore.input(from: later, preferred: [])
     #expect(!laterInput.currentIsPersonalHotspot, "the store is what carries the verdict")
 
-    let rendered = EngineBridge.render(laterInput)
+    let rendered = EngineBridge.renderSynchronously(laterInput)
     #expect(!rendered.connectedIsHotspot)
 }
 
@@ -183,7 +183,7 @@ func snapshotCarriesConnectedHotspotFacts() throws {
     #expect(input.currentHotspotBattery == 73)
 
     // The engine turns those into a hotspot row even though the scan is empty.
-    let output = EngineBridge.render(input)
+    let output = EngineBridge.renderSynchronously(input)
     #expect(output.connectedIsHotspot)
     #expect(output.connectedCell == .fiveG)
     #expect(output.connectedBattery == 73)
@@ -234,7 +234,7 @@ func powerOffCollapsesTheMenu() {
     let input = NBEngineInput()
     input.powerOn = false
     input.interfaceName = "en0"
-    let output = EngineBridge.render(input)
+    let output = EngineBridge.renderSynchronously(input)
     #expect(output.statusTitle == "Wi-Fi Off")
     #expect(output.items.count == 1)
     #expect(output.items.first?.role == .settings)
@@ -243,7 +243,7 @@ func powerOffCollapsesTheMenu() {
 @MainActor
 @Test("Malformed engine input yields an empty menu rather than a crash")
 func malformedInputIsContained() {
-    let output = EngineBridge.render(NBEngineInput())
+    let output = EngineBridge.renderSynchronously(NBEngineInput())
     // No power, so no networks; the footer is the UI's own row.
     #expect(output.items.allSatisfy { $0.role != .network })
 }
@@ -321,15 +321,15 @@ func redactedCaptureSetsTheFlag() {
 
 @MainActor
 @Test("Re-rendering keeps the list the last scan produced")
-func rerenderKeepsTheScan() throws {
+func rerenderKeepsTheScan() async throws {
     let store = storedFixture("sample.json")
     let before = store.output.items.count
     #expect(before > 1)
 
     // Unfolding is a view change: same capture, more rows.
-    store.revealsOther = true
-    #expect(store.output.items.count >= before)
-    store.revealsOther = false
+    await store.setRevealsOther(true)
+    #expect(store.output.items.count > before)
+    await store.setRevealsOther(false)
     #expect(store.output.items.count == before)
 }
 
@@ -346,12 +346,12 @@ func revealOtherExpands() throws {
         return network
     }
 
-    let folded = EngineBridge.render(input)
+    let folded = EngineBridge.renderSynchronously(input)
     #expect(folded.hiddenOtherCount > 0)
     let visibleFolded = rows(folded, .other).count
 
     input.revealOther = true
-    let expanded = EngineBridge.render(input)
+    let expanded = EngineBridge.renderSynchronously(input)
     #expect(expanded.hiddenOtherCount == 0)
     #expect(rows(expanded, .other).count > visibleFolded)
 }
@@ -368,7 +368,7 @@ func itemFieldsSurviveDecoding() throws {
     network.security = .WPA3
     input.networks = [network]
 
-    let item = try #require(EngineBridge.render(input).items.first { $0.role == .network })
+    let item = try #require(EngineBridge.renderSynchronously(input).items.first { $0.role == .network })
     #expect(item.ssid == "Desk")
     #expect(item.security == .WPA3)
     #expect(item.rssi == -55)
@@ -387,6 +387,29 @@ func barsFollowTheInterface() {
         input.interfaceName = "en0"
         input.currentSSID = "Home"
         input.currentRSSI = rssi
-        #expect(Int(EngineBridge.render(input).connectedStrength) == bars)
+        #expect(Int(EngineBridge.renderSynchronously(input).connectedStrength) == bars)
     }
+}
+
+@MainActor
+@Test("A state-only refresh keeps the redaction verdict from the last scan")
+func stateRefreshKeepsNameAvailability() throws {
+    // A scan that found every name withheld.
+    let scanned = NBSnapshot()
+    scanned.powerOn = true
+    scanned.interfaceName = "en0"
+    scanned.currentSSID = nil
+    scanned.currentRSSI = -60
+    scanned.namesAvailable = false
+    scanned.namesAvailabilityKnown = true
+    scanned.namesUnavailableReason = "hidden"
+    #expect(scanned.namesAvailabilityKnown)
+
+    // The state-only path answers nothing about names.
+    let state = NBSnapshot()
+    state.powerOn = true
+    state.interfaceName = "en0"
+    state.currentSSID = nil
+    state.currentRSSI = -61
+    #expect(state.namesAvailabilityKnown == false, "state capture must not claim either way")
 }

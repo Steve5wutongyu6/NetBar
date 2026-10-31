@@ -16,7 +16,7 @@ typedef void (^NBWiFiChangeHandler)(void);
 
 @interface NBWiFiMonitor : NSObject
 
-+ (instancetype)sharedMonitor;
++ (instancetype)shared;
 
 /// Starts reporting changes. `handler` runs on the main thread; calling twice
 /// replaces the handler.

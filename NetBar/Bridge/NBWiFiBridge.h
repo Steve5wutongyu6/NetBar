@@ -22,6 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT NSString *const NBWiFiBridgeErrorDomain;
 
 typedef NS_ENUM(NSInteger, NBWiFiBridgeError) {
+    /// Never reported; zero is left free so an uninitialised code cannot be
+    /// mistaken for a real failure.
+    NBWiFiBridgeErrorNone = 0,
     /// The radio did not accept a new power state.
     NBWiFiBridgeErrorPower = 1,
     /// No Wi-Fi interface could be found on the system.

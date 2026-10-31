@@ -60,22 +60,13 @@ extension AppDelegate {
     /// privacy, and it must not hang waiting for an answer.
     static var isRunningTests: Bool {
         let environment = ProcessInfo.processInfo.environment
-        if environment["XCTestConfigurationFilePath"] != nil {
-            return true
-        }
-        if environment.keys.contains(where: { $0.hasPrefix("XCTest") || $0.hasPrefix("XCInject") }) {
-            return true
-        }
-        if let injected = environment["DYLD_INSERT_LIBRARIES"], injected.contains(".xctest") {
-            return true
-        }
-        if CommandLine.arguments.contains(where: { $0.hasPrefix("-XCTest") || $0.contains(".xctest") }) {
-            return true
-        }
-        if NSClassFromString("XCTestCase") != nil {
-            return true
-        }
-        return Bundle.allBundles.contains { $0.bundlePath.hasSuffix(".xctest") }
+        let injected = environment["DYLD_INSERT_LIBRARIES"] ?? ""
+        // Swift Testing injects its bundle instead of setting XCTest's variables,
+        // so the injected library, the loaded bundle and the argv are all checked.
+        return environment.keys.contains { $0.hasPrefix("XCTest") || $0.hasPrefix("XCInject") }
+            || injected.contains(".xctest")
+            || CommandLine.arguments.contains { $0.hasPrefix("-XCTest") || $0.contains(".xctest") }
+            || NSClassFromString("XCTestCase") != nil
     }
 }
 

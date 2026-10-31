@@ -2,9 +2,10 @@
 //  NBWiFiModels.h
 //  NetBar
 //
-//  Immutable value types the Objective-C Wi-Fi bridge hands to Swift.
-//  Every field is plain C or a nullability-annotated type so the Swift importer
-//  generates clean, optional-correct interfaces.
+//  Notification-style reference types the Objective-C Wi-Fi bridge hands to
+//  Swift: one object per capture, written by the bridge and then read-only in
+//  practice. Every field is plain C or a nullability-annotated type so the Swift
+//  importer generates clean, optional-correct interfaces.
 //
 
 #import <Foundation/Foundation.h>
@@ -83,6 +84,9 @@ typedef NS_ENUM(NSInteger, NBHotspotNetwork) {
 @property (nonatomic, copy) NSArray<NBScannedNetwork *> *networks;
 /// Whether macOS let this process read network names at all.
 @property (nonatomic) BOOL namesAvailable;
+/// NO when this capture did not look (the state-only path), so callers can keep
+/// whatever the last scan found instead of trusting a default.
+@property (nonatomic) BOOL namesAvailabilityKnown;
 /// Human readable reason when `namesAvailable` is NO.
 @property (nonatomic, copy, nullable) NSString *namesUnavailableReason;
 

@@ -26,21 +26,22 @@ private func renderedStore(_ name: String) -> WiFiStore {
 }
 
 @MainActor
-private func pngData(_ store: WiFiStore) -> Data? {
-    SnapshotRenderer.image(for: store).representation(using: .png, properties: [:])
+private func pngData(_ store: WiFiStore) throws -> Data? {
+    try SnapshotRenderer.image(for: store).representation(using: .png, properties: [:])
 }
 
 @MainActor
 @Test("The panel renders the sample capture as a PNG")
-func sampleRenders() throws {
+func sampleRenders() async throws {
     let store = renderedStore("sample.json")
-    let image = SnapshotRenderer.image(for: store)
+    let image = try SnapshotRenderer.image(for: store)
 
     #expect(image.pixelsWide > 0)
     #expect(image.pixelsHigh > 0)
     // A menu is wider than it is tall.
     #expect(CGFloat(image.pixelsWide) / CGFloat(image.pixelsHigh) > 1)
-    let data = try #require(pngData(store))
+    let png = try pngData(store)
+    let data = try #require(png)
     #expect(data.count > 2_000)
     // PNG signature, so a truncated write cannot pass as success.
     #expect(Array(data.prefix(4)) == [0x89, 0x50, 0x4E, 0x47])
@@ -48,8 +49,8 @@ func sampleRenders() throws {
 
 @MainActor
 @Test("The rendered panel is taller when it lists more")
-func moreRowsAreTaller() {
-    let sample = SnapshotRenderer.image(for: renderedStore("sample.json"))
+func moreRowsAreTaller() throws {
+    let sample = try SnapshotRenderer.image(for: renderedStore("sample.json"))
 
     let bare = NBEngineInput()
     bare.powerOn = true
@@ -57,7 +58,7 @@ func moreRowsAreTaller() {
     let quiet = WiFiStore(source: .live)
     quiet.applyForTesting(bare)
 
-    let quietImage = SnapshotRenderer.image(for: quiet)
+    let quietImage = try SnapshotRenderer.image(for: quiet)
     #expect(sample.pixelsHigh > quietImage.pixelsHigh)
 }
 
@@ -84,19 +85,19 @@ func sectionsAreSeparated() throws {
 
 @MainActor
 @Test("Unfolding the strangers makes the rendered menu taller")
-func unfoldingGrowsTheMenu() {
+func unfoldingGrowsTheMenu() async throws {
     let store = renderedStore("sample.json")
-    let folded = SnapshotRenderer.image(for: store).pixelsHigh
-    store.revealsOther = true
-    let expanded = SnapshotRenderer.image(for: store).pixelsHigh
+    let folded = try SnapshotRenderer.image(for: store).pixelsHigh
+    await store.setRevealsOther(true)
+    let expanded = try SnapshotRenderer.image(for: store).pixelsHigh
     // The panel re-fits to its content, so the rows must actually take more room.
     #expect(expanded > folded)
 }
 
 @MainActor
 @Test("The rendered panel is not blank")
-func renderIsNotBlank() throws {
-    let image = SnapshotRenderer.image(for: renderedStore("sample.json"))
+func renderIsNotBlank() async throws {
+    let image = try SnapshotRenderer.image(for: renderedStore("sample.json"))
     let width = image.pixelsWide
     let height = image.pixelsHigh
     var distinct = Set<UInt32>()

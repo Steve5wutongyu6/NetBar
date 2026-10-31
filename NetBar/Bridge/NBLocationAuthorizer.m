@@ -14,11 +14,13 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
 @interface NBLocationAuthorizer () <CLLocationManagerDelegate>
 @property (nonatomic, strong) CLLocationManager *manager;
 @property (nonatomic, copy, nullable) void (^pendingCompletion)(NBLocationAuthorization);
+/// Last state handed to observers, so a repeated report does not look like news.
+@property (nonatomic) NBLocationAuthorization reportedAuthorization;
 @end
 
 @implementation NBLocationAuthorizer
 
-+ (instancetype)sharedAuthorizer
++ (instancetype)shared
 {
     static NBLocationAuthorizer *shared;
     static dispatch_once_t once;
@@ -36,6 +38,7 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
         // so it happens eagerly: without it the app never shows up in the pane.
         _manager = [[CLLocationManager alloc] init];
         _manager.delegate = self;
+        _reportedAuthorization = NBLocationAuthorizationNotDetermined;
         _manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers;
     }
     return self;
@@ -73,14 +76,23 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
 - (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager
 {
     NBLocationAuthorization authorization = [self.class authorizationFromStatus:manager.authorizationStatus];
+    BOOL changed = authorization != self.reportedAuthorization;
+    self.reportedAuthorization = authorization;
 
-    // The manager reports its state once on creation and again when the user
-    // answers. Only the answer completes a request; an unanswered prompt keeps
-    // waiting for the next callback.
-    if (self.pendingCompletion == nil || authorization == NBLocationAuthorizationNotDetermined) {
+    // The manager reports once on creation and again whenever the answer or the
+    // system setting changes. Observers are told about the answer, not about the
+    // opening report, so a grant made in System Settings also reaches the menu.
+    if (changed && authorization != NBLocationAuthorizationNotDetermined) {
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:NBLocationAuthorizationDidChangeNotification
+                          object:nil];
+    }
+
+    // An unanswered prompt keeps its completion for the next callback.
+    void (^completion)(NBLocationAuthorization) = self.pendingCompletion;
+    if (completion == nil || authorization == NBLocationAuthorizationNotDetermined) {
         return;
     }
-    void (^completion)(NBLocationAuthorization) = self.pendingCompletion;
     self.pendingCompletion = nil;
     completion(authorization);
 }

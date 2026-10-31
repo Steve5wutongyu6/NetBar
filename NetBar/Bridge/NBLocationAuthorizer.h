@@ -25,7 +25,7 @@ FOUNDATION_EXPORT NSNotificationName const NBLocationAuthorizationDidChangeNotif
 
 @interface NBLocationAuthorizer : NSObject
 
-+ (instancetype)sharedAuthorizer;
++ (instancetype)shared;
 
 /// Current state, without prompting.
 @property (nonatomic, readonly) NBLocationAuthorization authorization;

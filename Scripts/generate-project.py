@@ -60,8 +60,9 @@ TEST_SOURCES = [
     ("NetBarTests/MenuRenderTests.swift", "NetBarTests"),
 ]
 
-# Fixtures ship inside the app so `--fixture/--snapshot` work from a built bundle.
-RESOURCE_FOLDERS = [("NetBarTests/Fixtures", "NetBarTests")]
+# Fixtures are a test asset: the app reads them by path (--fixture/--snapshot),
+# so bundling a copy into the shipped .app would only add weight.
+RESOURCE_FOLDERS: list[tuple[str, str]] = []
 
 APP = "NetBar"
 TESTS = "NetBarTests"
@@ -105,9 +106,7 @@ for path, _ in SOURCES:
 for path, _ in TEST_SOURCES:
     emit(f"\t\t{oid('build:' + path)} /* {os.path.basename(path)} in Sources */ = "
          f"{{isa = PBXBuildFile; fileRef = {oid('file:' + path)} /* {os.path.basename(path)} */; }};")
-for path, _ in RESOURCE_FOLDERS:
-    emit(f"\t\t{oid('build:' + path)} /* {os.path.basename(path)} in Resources */ = "
-         f"{{isa = PBXBuildFile; fileRef = {oid('file:' + path)} /* {os.path.basename(path)} */; }};")
+
 emit("/* End PBXBuildFile section */")
 
 # --- PBXContainerItemProxy --------------------------------------------------
@@ -197,8 +196,7 @@ group_body(oid("group:Contracts"), "Contracts",
            path="Contracts")
 group_body(oid("group:NetBarTests"), "NetBarTests",
            [f"{oid('file:' + path)} /* {os.path.basename(path)} */"
-            for path, g in TEST_SOURCES if g == "NetBarTests"]
-           + [f"{oid('file:' + path)} /* {os.path.basename(path)} */" for path, _ in RESOURCE_FOLDERS],
+            for path, g in TEST_SOURCES if g == "NetBarTests"],
            path="NetBarTests")
 group_body(oid("group:Configs"), "Configs",
            [f"{oid('file:' + path)} /* {os.path.basename(path)} */" for path in CONFIGS])
@@ -377,8 +375,9 @@ TEST_SETTINGS = [
     ("ENABLE_HARDENED_RUNTIME", "YES"),
     ("ARCHS", "\"arm64 x86_64\""),
 ]
+# MARKETING_VERSION and CURRENT_PROJECT_VERSION live in Configs/Shared.xcconfig;
+# the project file must not repeat them, or the two drift apart.
 PROJECT_SETTINGS = [
-    ("MARKETING_VERSION", "1.0.0"),
     ("CURRENT_PROJECT_VERSION", "1"),
     ("CLANG_ENABLE_MODULES", "YES"),
     ("CLANG_ENABLE_OBJC_ARC", "YES"),
@@ -386,7 +385,7 @@ PROJECT_SETTINGS = [
     ("GCC_WARN_UNDECLARED_SELECTOR", "YES"),
     ("CLANG_ANALYZER_NONNULL", "YES"),
     ("ENABLE_STRICT_OBJC_MSGSEND", "YES"),
-    ("SWIFT_STRICT_CONCURRENCY", "minimal"),
+    ("SWIFT_STRICT_CONCURRENCY", "targeted"),
     ("SWIFT_TREAT_WARNINGS_AS_ERRORS", "NO"),
     ("GCC_TREAT_WARNINGS_AS_ERRORS", "NO"),
 ]

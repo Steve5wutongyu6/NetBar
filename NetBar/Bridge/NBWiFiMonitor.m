@@ -15,12 +15,15 @@ static const NSTimeInterval NBCoalesceInterval = 0.25;
 @property (nonatomic, strong) CWWiFiClient *client;
 @property (nonatomic, copy, nullable) NBWiFiChangeHandler handler;
 @property (nonatomic) BOOL observing;
+/// Guarded by `stateLock`: the coalescing flag is touched from the delegate queue
+/// and from the main queue the delivery runs on.
 @property (nonatomic) BOOL deliveryPending;
+@property (nonatomic, strong) NSLock *stateLock;
 @end
 
 @implementation NBWiFiMonitor
 
-+ (instancetype)sharedMonitor
++ (instancetype)shared
 {
     static NBWiFiMonitor *shared;
     static dispatch_once_t once;
@@ -35,6 +38,7 @@ static const NSTimeInterval NBCoalesceInterval = 0.25;
     self = [super init];
     if (self) {
         _client = [CWWiFiClient sharedWiFiClient];
+        _stateLock = [[NSLock alloc] init];
     }
     return self;
 }
@@ -82,10 +86,13 @@ static const NSTimeInterval NBCoalesceInterval = 0.25;
 /// Coalesces a burst into one callback.
 - (void)reportChange
 {
-    if (self.handler == nil || self.deliveryPending) {
+    [self.stateLock lock];
+    BOOL alreadyPending = self.deliveryPending;
+    self.deliveryPending = YES;
+    [self.stateLock unlock];
+    if (self.handler == nil || alreadyPending) {
         return;
     }
-    self.deliveryPending = YES;
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(NBCoalesceInterval * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
@@ -93,7 +100,9 @@ static const NSTimeInterval NBCoalesceInterval = 0.25;
         if (self_ == nil) {
             return;
         }
+        [self_.stateLock lock];
         self_.deliveryPending = NO;
+        [self_.stateLock unlock];
         NBWiFiChangeHandler handler = self_.handler;
         if (handler != nil) {
             handler();

@@ -34,7 +34,7 @@ static NSString *const NBHotspotSessionDelegateSelector = @"session:updatedFound
 
 @implementation NBHotspotMonitor
 
-+ (instancetype)sharedMonitor
++ (instancetype)shared
 {
     static NBHotspotMonitor *shared;
     static dispatch_once_t once;
@@ -162,10 +162,11 @@ static NSString *const NBHotspotSessionDelegateSelector = @"session:updatedFound
     peer.name = name;
 
     NSNumber *battery = [self objectFrom:device selector:"batteryLife"];
-    peer.batteryPercent = battery == nil ? 0 : battery.integerValue;
+    // The device reports a percentage; anything else is clamped rather than shown.
+    peer.batteryPercent = battery == nil ? 0 : MIN(MAX(battery.integerValue, 0), 100);
 
     NSNumber *signal = [self objectFrom:device selector:"signalStrength"];
-    peer.signalBars = signal == nil ? 0 : signal.integerValue;
+    peer.signalBars = signal == nil ? 0 : MIN(MAX(signal.integerValue, 0), 4);
 
     peer.networkLabel = [self networkLabelFromDevice:device];
     return peer;

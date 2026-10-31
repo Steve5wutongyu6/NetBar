@@ -203,6 +203,12 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
 
 #pragma mark - Bridge
 
+@interface NBWiFiBridge ()
+/// Copies the hotspot metadata of the network the interface is associated with
+/// onto `snapshot`.
++ (void)describe:(NBSnapshot *)snapshot connectedNetworkIn:(NSArray<NBScannedNetwork *> *)networks;
+@end
+
 @implementation NBWiFiBridge
 
 + (nullable NSString *)defaultInterfaceName {
@@ -215,7 +221,7 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     if (interface == nil) {
         // Machines without a Wi-Fi radio: a valid, empty snapshot.
         snapshot.powerOn = NO;
-        snapshot.namesAvailable = YES;
+        snapshot.namesAvailabilityKnown = NO;
         return snapshot;
     }
 
@@ -225,8 +231,10 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     snapshot.currentBSSID = interface.bssid;
     snapshot.currentRSSI = interface.rssiValue;
     // State use is cheap enough to call synchronously; the connected network is
-    // described by its own scan record, so the hotspot fields stay at defaults here.
-    snapshot.namesAvailable = YES;
+    // described by its own scan record, so the hotspot fields stay at defaults
+    // here. Name availability is only observable by scanning, so it stays
+    // unknown and the caller keeps the last scan's verdict.
+    snapshot.namesAvailabilityKnown = NO;
     return snapshot;
 }
 
@@ -301,8 +309,9 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     }];
     snapshot.networks = networks;
 
+    snapshot.namesAvailabilityKnown = YES;
+    snapshot.namesAvailable = !allNamesRedacted;
     if (allNamesRedacted) {
-        snapshot.namesAvailable = NO;
         snapshot.namesUnavailableReason = NBNamesUnavailableReason;
     }
 
@@ -368,8 +377,8 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     NSError *coreWLANError = nil;
     // `-[CWInterface setPower:error:]` carries no deprecation attribute in the macOS 27 SDK and the
     // header lists no replacement, so it is the supported way to toggle the radio. The diagnostic
-    // guard is kept deliberately: an SDK that does mark it deprecated must stay warning-free rather
-    // than silently breaking the build's -Werror policy.
+    // guard is kept deliberately: the release configuration treats warnings as errors, so an SDK
+    // that does mark it deprecated must not break the build.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     BOOL succeeded = [interface setPower:powerOn error:&coreWLANError];

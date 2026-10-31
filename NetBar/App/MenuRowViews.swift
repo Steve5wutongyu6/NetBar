@@ -33,8 +33,8 @@ struct MenuPanelView: View {
             if let title = store.statusTitle {
                 StatusRow(title: title)
             }
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                row
+            ForEach(rows) { row in
+                row.content
             }
             FooterSeparator()
             if store.namesUnavailable {
@@ -62,16 +62,17 @@ struct MenuPanelView: View {
         }
     }
 
-    /// Engine rows, minus the footer the panel draws itself.
-    private var rows: [AnyView] {
-        var rendered: [AnyView] = []
+    /// Engine rows, minus the footer the panel draws itself. Each row carries the
+    /// engine's stable identifier so SwiftUI updates in place instead of rebuilding.
+    private var rows: [MenuRow] {
+        var rendered: [MenuRow] = []
         let breaks = MenuRowPlanner.separatorOffsets(in: store.output.items)
         for (offset, item) in store.output.items.enumerated() {
             guard let row = rowView(for: item) else { continue }
             if breaks.contains(offset) {
-                rendered.append(AnyView(SectionSeparator()))
+                rendered.append(MenuRow(id: "separator.\(offset)", content: AnyView(SectionSeparator())))
             }
-            rendered.append(row)
+            rendered.append(MenuRow(id: item.identifier, content: row))
         }
         return rendered
     }
@@ -89,7 +90,7 @@ struct MenuPanelView: View {
                     hiddenCount: Int(store.output.hiddenOtherCount),
                     isExpanded: store.revealsOther
                 ) {
-                    store.revealsOther.toggle()
+                    Task { await store.setRevealsOther(!store.revealsOther) }
                 })
             case .settings:
                 return nil
@@ -146,6 +147,12 @@ private extension View {
     func rowHover(isEnabled: Bool = true) -> some View {
         modifier(RowHover(isEnabled: isEnabled))
     }
+}
+
+/// One row of the menu with its identity.
+private struct MenuRow: Identifiable {
+    let id: String
+    let content: AnyView
 }
 
 /// Hairline between two sections.
