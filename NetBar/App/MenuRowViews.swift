@@ -89,7 +89,7 @@ struct MenuPanelView: View {
                     hiddenCount: Int(store.output.hiddenOtherCount),
                     isExpanded: store.revealsOther
                 ) {
-                    store.revealsOther.toggle()
+                    Task { await store.setRevealsOther(!store.revealsOther) }
                 })
             case .settings:
                 return nil

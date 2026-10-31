@@ -30,14 +30,9 @@ final class WiFiStore {
     /// Incremented on every applied menu, so the panel knows to re-fit its size.
     private(set) var revision = 0
 
-    /// The user unfolded "Other Networks".
-    var revealsOther = false {
-        didSet {
-            guard revealsOther != oldValue else { return }
-            // Unfolding is a view change: re-render the same capture.
-            rerender()
-        }
-    }
+    /// The user unfolded "Other Networks". Unfolding is a view change, so it
+    /// re-renders the same capture; that render is awaited by the caller.
+    private(set) var revealsOther = false
 
     let source: Source
     private var lastSnapshot: NBSnapshot?
@@ -123,7 +118,7 @@ final class WiFiStore {
     private func load(scan: Bool) async {
         switch source {
         case .fixture(let url):
-            apply(fixtureInput(at: url))
+            renderAndApplySynchronously(fixtureInput(at: url))
         case .live:
             isScanning = true
             defer { isScanning = false }
@@ -145,7 +140,7 @@ final class WiFiStore {
             }
             lastSnapshot = snapshot
             let input = Self.input(from: snapshot, preferred: preferred)
-            apply(input)
+            await renderAndApply(input)
         }
     }
 
@@ -183,16 +178,37 @@ final class WiFiStore {
     }
 
     /// Re-renders the last capture, e.g. after the user unfolded the list.
-    func rerender() {
+    /// Unfolds or folds the "Other Networks" list.
+    func setRevealsOther(_ value: Bool) async {
+        guard value != revealsOther else { return }
+        revealsOther = value
         guard let lastInput else { return }
-        apply(lastInput)
+        await renderAndApply(lastInput)
     }
 
-    private func apply(_ input: NBEngineInput?) {
+    /// Re-renders the last capture, e.g. after the list changed shape.
+    func rerender() async {
+        guard let lastInput else { return }
+        await renderAndApply(lastInput)
+    }
+
+    /// Renders off the main thread, then applies the result on it.
+    private func renderAndApply(_ input: NBEngineInput) async {
+        input.revealOther = revealsOther
+        let rendered = await EngineBridge.render(input)
+        apply(input, rendered)
+    }
+
+    /// The synchronous form, for fixtures and snapshot rendering, where no run
+    /// loop exists to await on.
+    private func renderAndApplySynchronously(_ input: NBEngineInput?) {
         guard let input else { return }
         input.revealOther = revealsOther
+        apply(input, EngineBridge.renderSynchronously(input))
+    }
+
+    private func apply(_ input: NBEngineInput, _ rendered: NBEngineOutput) {
         lastInput = input
-        let rendered = EngineBridge.render(input)
         output = rendered
         revision += 1
         statusTitle = rendered.statusTitle
@@ -214,14 +230,14 @@ final class WiFiStore {
     /// Renders an engine request directly. Used by snapshot rendering and tests
     /// to lay out a menu that no capture produced.
     func applyForTesting(_ input: NBEngineInput) {
-        apply(input)
+        renderAndApplySynchronously(input)
     }
 
     /// Hydrates a fixture capture synchronously, for snapshot rendering where no
     /// run loop is available yet.
     func loadFixtureSynchronously() {
         guard case .fixture(let url) = source else { return }
-        apply(fixtureInput(at: url))
+        renderAndApplySynchronously(fixtureInput(at: url))
     }
 
     private func fixtureInput(at url: URL) -> NBEngineInput? {

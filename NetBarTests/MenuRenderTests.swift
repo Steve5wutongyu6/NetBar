@@ -84,10 +84,10 @@ func sectionsAreSeparated() throws {
 
 @MainActor
 @Test("Unfolding the strangers makes the rendered menu taller")
-func unfoldingGrowsTheMenu() {
+func unfoldingGrowsTheMenu() async {
     let store = renderedStore("sample.json")
     let folded = SnapshotRenderer.image(for: store).pixelsHigh
-    store.revealsOther = true
+    await store.setRevealsOther(true)
     let expanded = SnapshotRenderer.image(for: store).pixelsHigh
     // The panel re-fits to its content, so the rows must actually take more room.
     #expect(expanded > folded)

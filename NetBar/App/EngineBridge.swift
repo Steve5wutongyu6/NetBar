@@ -11,7 +11,16 @@ import Foundation
 enum EngineBridge {
     /// Builds the menu for a capture. Falls back to an empty menu if the engine
     /// returns a reply the app cannot decode.
-    static func render(_ input: NBEngineInput) -> NBEngineOutput {
+    ///
+    /// JSON encode, engine call and JSON decode all run off the main thread: the
+    /// reply for a full scan is a few kilobytes and the radio refresh happens on
+    /// every event, so this must not compete with drawing the menu.
+    static func render(_ input: NBEngineInput) async -> NBEngineOutput {
+        await Task.detached(priority: .userInitiated) { renderSynchronously(input) }.value
+    }
+
+    /// The blocking form, for callers that already run off the main thread.
+    static func renderSynchronously(_ input: NBEngineInput) -> NBEngineOutput {
         guard let data = input.jsonData(),
               let request = String(data: data, encoding: .utf8) else {
             return emptyOutput()
@@ -26,6 +35,11 @@ enum EngineBridge {
         return output ?? emptyOutput()
     }
 
+    /// The engine's version string.
+    ///
+    /// `netbar_engine_version` returns a pointer to a static string owned by the
+    /// engine, not a heap buffer, so there is nothing to free here — freeing it
+    /// would corrupt the engine. The value is copied into a Swift string.
     static var version: String {
         guard let pointer = netbar_engine_version() else { return "unknown" }
         return String(cString: pointer)
