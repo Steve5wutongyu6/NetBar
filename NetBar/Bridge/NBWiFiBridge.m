@@ -203,6 +203,12 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
 
 #pragma mark - Bridge
 
+@interface NBWiFiBridge ()
+/// Copies the hotspot metadata of the network the interface is associated with
+/// onto `snapshot`.
++ (void)describe:(NBSnapshot *)snapshot connectedNetworkIn:(NSArray<NBScannedNetwork *> *)networks;
+@end
+
 @implementation NBWiFiBridge
 
 + (nullable NSString *)defaultInterfaceName {
