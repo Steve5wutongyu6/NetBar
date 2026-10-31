@@ -5,6 +5,7 @@
 
 #import "NBLocationAuthorizer.h"
 
+#import <AppKit/AppKit.h>
 #import <CoreLocation/CoreLocation.h>
 
 NSNotificationName const NBLocationAuthorizationDidChangeNotification =
@@ -60,6 +61,9 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
         return;
     }
     self.pendingCompletion = completion;
+    // A menu bar accessory is never frontmost, and macOS only shows the privacy
+    // prompt for the active app, so ask for the foreground first.
+    [NSApplication.sharedApplication activateIgnoringOtherApps:YES];
     // The prompt is asynchronous; the delegate callback finishes the request.
     [self.manager requestWhenInUseAuthorization];
 }
@@ -69,15 +73,16 @@ NSNotificationName const NBLocationAuthorizationDidChangeNotification =
 - (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager
 {
     NBLocationAuthorization authorization = [self.class authorizationFromStatus:manager.authorizationStatus];
+
+    // The manager reports its state once on creation and again when the user
+    // answers. Only the answer completes a request; an unanswered prompt keeps
+    // waiting for the next callback.
+    if (self.pendingCompletion == nil || authorization == NBLocationAuthorizationNotDetermined) {
+        return;
+    }
     void (^completion)(NBLocationAuthorization) = self.pendingCompletion;
     self.pendingCompletion = nil;
-
-    [[NSNotificationCenter defaultCenter]
-        postNotificationName:NBLocationAuthorizationDidChangeNotification
-                      object:self];
-    if (completion) {
-        completion(authorization);
-    }
+    completion(authorization);
 }
 
 #pragma mark - Helpers

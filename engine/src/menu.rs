@@ -110,13 +110,20 @@ pub fn build(input: &Input) -> Output {
             "header.hotspot",
             "Personal Hotspot",
         ));
-        for network in hotspots {
+        for (index, network) in hotspots.into_iter().enumerate() {
             // A hotspot whose name macOS withheld still earns a row: the beacon
             // says what it is, and the detail columns carry signal, Cellular and
             // battery, which is exactly what the section is for.
             let named = network.ssid.clone();
             let title = named.clone().unwrap_or_else(|| REDACTED_TITLE.to_owned());
-            let identity = named.clone().unwrap_or_else(|| network.identity());
+            let identity = named.clone().unwrap_or_else(|| {
+                // Without an address the scan order is all there is to tell two
+                // unnamed hotspots apart, and it only has to be unique per menu.
+                match network.identity() {
+                    address if address.is_empty() => format!("unnamed-{index}"),
+                    address => address,
+                }
+            });
             let mut item = Item::network(Section::Hotspot, format!("hotspot.{identity}"), &title);
             if named.is_none() {
                 item.ssid = None;
@@ -351,10 +358,11 @@ fn collapse(networks: &[Network]) -> Vec<Network> {
     let mut collapsed: Vec<Network> = Vec::with_capacity(networks.len());
     for network in networks {
         // An entry needs something to be identified by: a name, a saved profile
-        // that names it, or — for a hotspot the OS would not name — its BSSID.
-        let has_identity = network.ssid.is_some()
-            || network.service_name.is_some()
-            || (network.personal_hotspot && network.bssid.is_some());
+        // that names it, or a hotspot flag. macOS withholds the BSSID along with
+        // the name, so a hotspot with neither is still kept: its beacon says what
+        // it is, and that is the whole point of the section.
+        let has_identity =
+            network.ssid.is_some() || network.service_name.is_some() || network.personal_hotspot;
         if !has_identity {
             continue;
         }

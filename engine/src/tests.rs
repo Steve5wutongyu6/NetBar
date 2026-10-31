@@ -323,13 +323,29 @@ fn unnamed_hotspot_still_appears_with_its_detail() {
     assert_eq!(hotspot[0].strength, 3);
 }
 
-// An unnamed hotspot with no address cannot be identified, so it stays out.
+// macOS withholds the BSSID along with the name, so a hotspot can arrive with
+// neither; it still belongs in the section, with a unique row id.
 #[test]
-fn unnamed_hotspot_without_an_address_is_ignored() {
+fn unnamed_hotspot_without_an_address_is_kept() {
     let entries = "{\"ssid\":null,\"rssi\":-61,\"known\":false,\"personalHotspot\":true,\
 \"hotspotNetwork\":2,\"hotspotBattery\":88}";
     let output = render(&request(true, None, entries));
-    assert!(rows(&output, Section::Hotspot).is_empty());
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    assert_eq!(hotspot[0].title.as_deref(), Some("Not Nearby"));
+    assert!(hotspot[0].redacted);
+    assert_eq!(hotspot[0].battery, 88);
+}
+
+// Two address-less hotspots still get two distinct rows.
+#[test]
+fn addressless_hotspots_have_unique_ids() {
+    let one = "{\"ssid\":null,\"rssi\":-61,\"known\":false,\"personalHotspot\":true,\"hotspotNetwork\":2}";
+    let two = "{\"ssid\":null,\"rssi\":-55,\"known\":false,\"personalHotspot\":true,\"hotspotNetwork\":2}";
+    let output = render(&request(true, None, &format!("{one},{two}")));
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 2);
+    assert_ne!(hotspot[0].id, hotspot[1].id);
 }
 
 // Two unnamed hotspots stay two rows: they are told apart by address.

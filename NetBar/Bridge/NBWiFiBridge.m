@@ -19,6 +19,9 @@ NSString *const NBWiFiBridgeErrorDomain = @"dev.netbar.app.wifi-bridge";
 /// Interface used when no Wi-Fi interface reports that it is powered on.
 static NSString *const NBFallbackInterfaceName = @"en0";
 
+/// Joining a network can take a few seconds; the scan that precedes it is bounded
+/// by the same patience a caller has for the whole operation.
+
 /// Shown when macOS returned scan results but blanked every name. Network names
 /// are gated behind Location Services authorization on macOS 15 and later.
 static NSString *const NBNamesUnavailableReason =
@@ -209,6 +212,47 @@ static NBScannedNetwork *NBScannedNetworkFromNetwork(
     // described by its own scan record, so the hotspot fields stay at defaults here.
     snapshot.namesAvailable = YES;
     return snapshot;
+}
+
++ (BOOL)joinNetworkWithSSID:(NSString *)ssid error:(NSError **)error {
+    CWInterface *interface = NBResolveInterface();
+    if (interface == nil) {
+        if (error) {
+            *error = NBMakeBridgeError(NBWiFiBridgeErrorInterfaceUnavailable,
+                                       @"No Wi-Fi interface is available.", nil);
+        }
+        return NO;
+    }
+    if (interface.ssid != nil && [interface.ssid isEqualToString:ssid]) {
+        return YES;
+    }
+
+    // The radio needs a CWNetwork handle, and only a scan produces one.
+    NSSet<CWNetwork *> *scanResults = [interface scanForNetworksWithName:ssid error:nil];
+    CWNetwork *target = nil;
+    for (CWNetwork *network in scanResults) {
+        if (network.ssid != nil && [network.ssid isEqualToString:ssid]) {
+            if (target == nil || network.rssiValue > target.rssiValue) {
+                target = network;
+            }
+        }
+    }
+    if (target == nil) {
+        if (error) {
+            *error = NBMakeBridgeError(NBWiFiBridgeErrorNetworkNotFound,
+                                       @"The network is no longer in range.", nil);
+        }
+        return NO;
+    }
+
+    NSError *joinError = nil;
+    // A nil password lets the saved keychain item, or the open network, speak.
+    BOOL joined = [interface associateToNetwork:target password:nil error:&joinError];
+    if (!joined && error) {
+        *error = NBMakeBridgeError(NBWiFiBridgeErrorJoin, @"The network did not accept the join.",
+                                   joinError);
+    }
+    return joined;
 }
 
 + (NBSnapshot *)captureSnapshot {

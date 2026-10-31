@@ -47,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // macOS reveals network names only to an authorized app, and it only
         // lists an app that asked. Asking at launch is what makes the menu show
         // names instead of a privacy row; after the first answer it is silent.
-        Task { await store.requestNameAccess() }
+        store.requestNameAccess()
     }
 }
 

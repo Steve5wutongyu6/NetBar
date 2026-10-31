@@ -23,6 +23,13 @@ private func fixture(_ name: String) -> URL {
 }
 
 @MainActor
+private func storedFixture(_ name: String) -> WiFiStore {
+    let store = WiFiStore(source: .fixture(fixturesDirectory.appendingPathComponent(name)))
+    store.loadFixtureSynchronously()
+    return store
+}
+
+@MainActor
 private func store(_ fixture: URL) -> WiFiStore {
     let store = WiFiStore(source: .fixture(fixture))
     store.loadFixtureSynchronously()
@@ -220,6 +227,20 @@ func redactedCaptureSetsTheFlag() {
     // An idle radio is not a hidden connection.
     snapshot.currentRSSI = 0
     #expect(WiFiStore.input(from: snapshot, preferred: []).connectedNameRedacted == false)
+}
+
+@MainActor
+@Test("Re-rendering keeps the list the last scan produced")
+func rerenderKeepsTheScan() throws {
+    let store = storedFixture("sample.json")
+    let before = store.output.items.count
+    #expect(before > 1)
+
+    // Unfolding is a view change: same capture, more rows.
+    store.revealsOther = true
+    #expect(store.output.items.count >= before)
+    store.revealsOther = false
+    #expect(store.output.items.count == before)
 }
 
 @MainActor

@@ -40,10 +40,18 @@ final class MenuBarController: NSObject {
     private var hostingView: NSHostingView<AnyView>?
     private var dismissMonitor: Any?
     private var refreshTimer: Timer?
+    private var isWatchingContent = false
+    private var authorizationObserver: NSObjectProtocol?
 
     init(store: WiFiStore) {
         self.store = store
         super.init()
+    }
+
+    deinit {
+        if let authorizationObserver {
+            NotificationCenter.default.removeObserver(authorizationObserver)
+        }
     }
 
     func start() {
@@ -54,6 +62,20 @@ final class MenuBarController: NSObject {
         statusItem = item
         updateStatusItem()
         Task { await store.refresh(scan: true) }
+
+        // Granting access from System Settings while NetBar runs must reach the
+        // menu without reopening it.
+        authorizationObserver = NotificationCenter.default.addObserver(
+            forName: Notification.Name.NBLocationAuthorizationDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                await self.store.authorizationDidChange()
+                self.updateStatusItem()
+            }
+        }
     }
 
     /// Redraws the status item glyph from the current menu state.
@@ -99,6 +121,7 @@ final class MenuBarController: NSObject {
             position(panel, under: window.convertToScreen(button.convert(button.bounds, to: nil)))
             panel.makeKeyAndOrderFront(nil)
             startRefreshTimerIfNeeded()
+            watchContentChanges()
         }
     }
 
@@ -158,6 +181,33 @@ final class MenuBarController: NSObject {
     }
 
     /// Keeps the list honest while it is open, without scanning the radio again.
+    /// Re-fits the panel whenever the menu changes: unfolding "Other Networks"
+    /// adds rows, and a window that keeps its old height would hide them.
+    private func watchContentChanges() {
+        guard !isWatchingContent else { return }
+        isWatchingContent = true
+        withObservationTracking {
+            _ = store.revision
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isWatchingContent = false
+                guard let panel = self.panel, panel.isVisible else { return }
+                self.resize(panel)
+                self.position(panel, under: self.anchorRect(for: panel))
+                self.watchContentChanges()
+            }
+        }
+    }
+
+    /// The status button's frame in screen coordinates.
+    private func anchorRect(for panel: MenuPanel) -> NSRect {
+        guard let button = statusItem?.button, let window = button.window else {
+            return NSRect(x: panel.frame.midX, y: panel.frame.maxY, width: 1, height: 1)
+        }
+        return window.convertToScreen(button.convert(button.bounds, to: nil))
+    }
+
     private func startRefreshTimerIfNeeded() {
         stopRefreshTimer()
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in

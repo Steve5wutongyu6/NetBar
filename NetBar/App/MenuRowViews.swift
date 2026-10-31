@@ -41,12 +41,10 @@ struct MenuPanelView: View {
                 // Only shown when macOS actually withheld the names; elsewhere
                 // the panel stays silent about privacy.
                 SettingsLinkRow(title: "Allow NetBar to See Network Names…") {
-                    Task {
-                        // Asking first is what puts NetBar in the Location
-                        // Services list the pane opens.
-                        await store.requestNameAccess()
-                        NBWiFiBridge.openPrivacySettings()
-                    }
+                    // Asking first is what puts NetBar in the Location Services
+                    // list this pane opens.
+                    store.requestNameAccess()
+                    NBWiFiBridge.openPrivacySettings()
                 }
             } else {
                 SettingsLinkRow(title: "Wi-Fi Settings…") {
@@ -83,7 +81,9 @@ struct MenuPanelView: View {
             case .header:
                 return AnyView(SectionHeaderRow(title: item.title ?? ""))
             case .network:
-                return AnyView(NetworkRow(item: item))
+                return AnyView(NetworkRow(item: item) {
+                    Task { await store.connect(item) }
+                })
             case .otherNetworks:
                 return AnyView(OtherNetworksRow(
                     hiddenCount: Int(store.output.hiddenOtherCount),
@@ -174,23 +174,53 @@ private struct SectionHeaderRow: View {
 }
 
 /// One network: name, then whatever trailing detail the engine asked for.
+/// Clicking it asks the system to join, so the row highlights on hover and only
+/// the network already joined is inert.
 private struct NetworkRow: View {
     let item: NBEngineItem
+    let join: () -> Void
+
+    @State private var isHovering = false
+
+    private var isActionable: Bool {
+        !item.isJoined && item.ssid != nil
+    }
 
     var body: some View {
-        HStack(spacing: 6) {
-            CheckmarkSlot(isJoined: item.isJoined)
-            Text(displayName)
-                .font(.system(size: 13))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(item.isJoined ? .primary : .primary)
-            Spacer(minLength: 6)
-            TrailingDetail(item: item)
+        Button(action: join) {
+            HStack(spacing: 6) {
+                CheckmarkSlot(isJoined: item.isJoined)
+                Text(displayName)
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 6)
+                TrailingDetail(item: item)
+            }
+            .padding(.horizontal, MenuMetrics.textPadding)
+            .frame(height: MenuMetrics.rowHeight)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, MenuMetrics.textPadding)
-        .frame(height: MenuMetrics.rowHeight)
+        .buttonStyle(.plain)
+        .disabled(!isActionable)
         .padding(.horizontal, MenuMetrics.innerPadding)
+        .background {
+            if isHovering && isActionable {
+                RoundedRectangle(cornerRadius: MenuMetrics.cornerRadius, style: .continuous)
+                    .fill(Color.primary.opacity(0.08))
+            }
+        }
+        .onHover { hovering in
+            isHovering = hovering
+            if isActionable {
+                // A clickable row says so before it is clicked.
+                if hovering {
+                    NSCursor.pointingHand.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+        }
     }
 
     private var displayName: String {

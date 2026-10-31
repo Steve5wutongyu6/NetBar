@@ -26,6 +26,10 @@ typedef NS_ENUM(NSInteger, NBWiFiBridgeError) {
     NBWiFiBridgeErrorPower = 1,
     /// No Wi-Fi interface could be found on the system.
     NBWiFiBridgeErrorInterfaceUnavailable = 2,
+    /// The chosen network disappeared between the scan and the click.
+    NBWiFiBridgeErrorNetworkNotFound = 3,
+    /// The radio refused the association, usually for a missing password.
+    NBWiFiBridgeErrorJoin = 4,
 };
 
 @interface NBWiFiBridge : NSObject
@@ -48,6 +52,14 @@ typedef NS_ENUM(NSInteger, NBWiFiBridgeError) {
 /// so it stays populated even when macOS redacts SSIDs for this process. This is
 /// what the app sends to the engine as the "saved networks" list.
 + (NSArray<NSString *> *)preferredNetworkNames;
+
+/// Joins the network with this SSID, starting the system's own association
+/// process. Saved networks use the password already in the keychain, so no
+/// credential is passed; an unknown secured network returns an error and the
+/// caller falls back to the system Wi-Fi pane.
+///
+/// Blocks while the radio associates, so call it off the main thread.
++ (BOOL)joinNetworkWithSSID:(NSString *)ssid error:(NSError **)error;
 
 /// Turns the Wi-Fi radio on or off. Returns NO and fills `error` on failure.
 + (BOOL)setPowerOn:(BOOL)powerOn error:(NSError **)error;

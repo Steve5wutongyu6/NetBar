@@ -27,17 +27,24 @@ final class WiFiStore {
     private(set) var connectedIsHotspot = false
     private(set) var strength = 0
     private(set) var statusTitle: String?
+    /// Incremented on every applied menu, so the panel knows to re-fit its size.
+    private(set) var revision = 0
 
     /// The user unfolded "Other Networks".
     var revealsOther = false {
         didSet {
             guard revealsOther != oldValue else { return }
-            Task { await refresh(scan: false) }
+            // Unfolding is a view change: re-render the same capture.
+            rerender()
         }
     }
 
     let source: Source
     private var lastSnapshot: NBSnapshot?
+    /// Networks from the last full scan. A state-only refresh reuses them, so
+    /// reading the connection state never empties the list.
+    private var scannedNetworks: [NBScannedNetwork] = []
+    private var lastInput: NBEngineInput?
 
     init(source: Source = .live) {
         self.source = source
@@ -49,18 +56,40 @@ final class WiFiStore {
         await load(scan: scan)
     }
 
-    /// Asks for Location Services authorization. macOS reveals network names to
-    /// authorized apps only, and an app that never asks does not even appear in
-    /// the pane the settings link opens.
-    func requestNameAccess() async {
-        let authorizer = NBLocationAuthorizer.shared()
-        await withCheckedContinuation { continuation in
-            authorizer.requestAuthorization { _ in
-                continuation.resume()
+    /// Asks for Location Services authorization. macOS reveals network names —
+    /// and the beacon metadata that identifies a Personal Hotspot — only to
+    /// authorized apps, and an app that never asks does not even appear in the
+    /// pane the settings link opens.
+    ///
+    /// The answer can take a while, and a suppressed prompt may never arrive, so
+    /// this does not wait: the authorization notification brings the new state.
+    func requestNameAccess() {
+        NBLocationAuthorizer.shared().requestAuthorization(completion: nil)
+    }
+
+    /// Re-reads the radio after the user changed the authorization.
+    func authorizationDidChange() async {
+        guard NBLocationAuthorizer.shared().isAuthorized else { return }
+        await refresh(scan: true)
+    }
+
+    /// Asks the system to join a network. A saved profile joins with its stored
+    /// password; anything else needs the system pane, which is where the click
+    /// goes when the radio refuses.
+    func connect(_ item: NBEngineItem) async {
+        guard case .live = source, let ssid = item.ssid, !item.isJoined else { return }
+        let joined: Bool = await Task.detached(priority: .userInitiated) {
+            do {
+                try NBWiFiBridge.joinNetwork(withSSID: ssid)
+                return true
+            } catch {
+                return false
             }
-        }
-        if NBLocationAuthorizer.shared().isAuthorized {
+        }.value
+        if joined {
             await refresh(scan: true)
+        } else {
+            NBWiFiBridge.openWiFiSettings()
         }
     }
 
@@ -95,17 +124,31 @@ final class WiFiStore {
             _ = NBLocationAuthorizer.shared()
             let preferred = NBWiFiBridge.preferredNetworkNames()
             let snapshot = await Self.capture(scan: scan)
+            if scan {
+                scannedNetworks = snapshot.networks
+            } else {
+                // The connection state changed, the radio's neighbourhood did not.
+                snapshot.networks = scannedNetworks
+            }
             lastSnapshot = snapshot
             let input = Self.input(from: snapshot, preferred: preferred)
             apply(input)
         }
     }
 
+    /// Re-renders the last capture, e.g. after the user unfolded the list.
+    func rerender() {
+        guard let lastInput else { return }
+        apply(lastInput)
+    }
+
     private func apply(_ input: NBEngineInput?) {
         guard let input else { return }
         input.revealOther = revealsOther
+        lastInput = input
         let rendered = EngineBridge.render(input)
         output = rendered
+        revision += 1
         statusTitle = rendered.statusTitle
         powerOn = input.powerOn
         namesUnavailable = input.connectedNameRedacted
