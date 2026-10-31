@@ -33,6 +33,19 @@ ARGS=(-project "${ROOT}/NetBar.xcodeproj" -scheme NetBar -configuration "${CONFI
       -derivedDataPath "${ROOT}/build/DerivedData")
 TEST_ARGS=("${ARGS[@]}" -destination "platform=macOS")
 
+# The project targets the macOS 27 SDK. A CI runner that only has an older SDK
+# cannot link against it, so when NETBAR_ALLOW_OLDER_SDK=1 the deployment target
+# drops to whatever SDK is installed. Local builds with Xcode 27 are untouched.
+SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null || echo 0)"
+if [ "${NETBAR_ALLOW_OLDER_SDK:-0}" = "1" ]; then
+  OLDEST="$(printf '%s\n27.0\n' "${SDK_VERSION}" | sort -V | head -1)"
+  if [ "${OLDEST}" != "27.0" ]; then
+    echo "build.sh: installed SDK is ${SDK_VERSION}; building against it instead of 27.0" >&2
+    ARGS+=("MACOSX_DEPLOYMENT_TARGET=${SDK_VERSION}")
+    TEST_ARGS+=("MACOSX_DEPLOYMENT_TARGET=${SDK_VERSION}")
+  fi
+fi
+
 # Xcode 27 resolves the scheme's destination to the local Mac and then builds
 # only that slice, so a universal release states its architectures outright.
 if [ "${CONFIG}" = Release ]; then

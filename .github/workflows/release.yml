@@ -42,9 +42,15 @@ jobs:
           xcodebuild -version
 
       - name: Tests
+        env:
+          # Runners trail the newest Xcode; allow the installed SDK so the
+          # pipeline stays green while local builds use the macOS 27 SDK.
+          NETBAR_ALLOW_OLDER_SDK: '1'
         run: Scripts/test.sh
 
       - name: Menu snapshot
+        env:
+          NETBAR_ALLOW_OLDER_SDK: '1'
         run: |
           set -euo pipefail
           make snapshot
@@ -92,6 +98,8 @@ jobs:
           xcodebuild -version
 
       - name: Package
+        env:
+          NETBAR_ALLOW_OLDER_SDK: '1'
         run: Scripts/package.sh "${GITHUB_REF_NAME}"
 
       - name: Publish release
