@@ -131,6 +131,39 @@ func continuityReportsReachTheRow() throws {
 }
 
 @MainActor
+@Test("A state-only refresh keeps the hotspot verdict from the last scan")
+func stateRefreshKeepsHotspotVerdict() throws {
+    // What the radio reported when the menu was last scanned.
+    let first = NBSnapshot()
+    first.powerOn = true
+    first.interfaceName = "en0"
+    first.currentSSID = "Phone"
+    first.currentRSSI = -60
+    first.currentIsPersonalHotspot = true
+    first.currentHotspotNetwork = .network5G
+    first.currentHotspotBattery = 70
+    first.networks = []
+
+    let input = WiFiStore.input(from: first, preferred: [])
+    #expect(input.currentIsPersonalHotspot)
+    #expect(input.currentHotspotNetwork == .network5G)
+    #expect(input.currentHotspotBattery == 70)
+
+    // A later state-only capture has no scan data at all.
+    let later = NBSnapshot()
+    later.powerOn = true
+    later.interfaceName = "en0"
+    later.currentSSID = "Phone"
+    later.currentRSSI = -62
+    later.networks = []
+    let laterInput = WiFiStore.input(from: later, preferred: [])
+    #expect(!laterInput.currentIsPersonalHotspot, "the store is what carries the verdict")
+
+    let rendered = EngineBridge.render(laterInput)
+    #expect(!rendered.connectedIsHotspot)
+}
+
+@MainActor
 @Test("A capture carries what the radio knows about the joined hotspot")
 func snapshotCarriesConnectedHotspotFacts() throws {
     let snapshot = NBSnapshot()

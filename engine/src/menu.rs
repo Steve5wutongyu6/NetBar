@@ -83,7 +83,9 @@ pub fn build(input: &Input) -> Output {
     // The scan record is the primary evidence; the radio's own verdict covers the
     // case where that record could not be identified (names withheld).
     let joined_is_hotspot = joined_record.is_some_and(|record| record.personal_hotspot)
-        || input.current_is_personal_hotspot;
+        || input.current_is_personal_hotspot
+        // A Continuity report for the joined network's name is evidence too.
+        || peer_for(&input.peers, input.current_ssid.as_deref()).is_some();
     output.connected_is_hotspot = joined_is_hotspot;
     output.connected_name = if input.connected_name_redacted {
         None

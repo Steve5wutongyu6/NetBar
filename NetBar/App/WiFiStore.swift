@@ -44,6 +44,7 @@ final class WiFiStore {
     /// Networks from the last full scan. A state-only refresh reuses them, so
     /// reading the connection state never empties the list.
     private var scannedNetworks: [NBScannedNetwork] = []
+    private var hotspotState = HotspotState()
     private var lastInput: NBEngineInput?
 
     init(source: Source = .live) {
@@ -128,14 +129,41 @@ final class WiFiStore {
             let snapshot = await Self.capture(scan: scan)
             if scan {
                 scannedNetworks = snapshot.networks
+                hotspotState = Self.hotspotState(of: snapshot)
             } else {
                 // The connection state changed, the radio's neighbourhood did not.
                 snapshot.networks = scannedNetworks
+                // Hotspot metadata also comes from the scan, so it carries over.
+                Self.restore(hotspotState, into: snapshot)
             }
             lastSnapshot = snapshot
             let input = Self.input(from: snapshot, preferred: preferred)
             apply(input)
         }
+    }
+
+    /// What a full scan told us about the joined network's hotspot status.
+    private struct HotspotState {
+        var isPersonalHotspot = false
+        var isApplePersonalHotspot = false
+        var network: NBHotspotNetwork = .networkUnknown
+        var battery = 0
+    }
+
+    private static func hotspotState(of snapshot: NBSnapshot) -> HotspotState {
+        HotspotState(
+            isPersonalHotspot: snapshot.currentIsPersonalHotspot,
+            isApplePersonalHotspot: snapshot.currentIsApplePersonalHotspot,
+            network: snapshot.currentHotspotNetwork,
+            battery: snapshot.currentHotspotBattery
+        )
+    }
+
+    private static func restore(_ state: HotspotState, into snapshot: NBSnapshot) {
+        snapshot.currentIsPersonalHotspot = state.isPersonalHotspot
+        snapshot.currentIsApplePersonalHotspot = state.isApplePersonalHotspot
+        snapshot.currentHotspotNetwork = state.network
+        snapshot.currentHotspotBattery = state.battery
     }
 
     /// Re-renders the last capture, e.g. after the user unfolded the list.

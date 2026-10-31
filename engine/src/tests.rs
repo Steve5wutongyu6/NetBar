@@ -322,6 +322,20 @@ fn network_labels_map_to_the_indicator_the_menu_draws() {
     assert_eq!(menu::cell_from_label(None), Cell::None);
 }
 
+// A Continuity report alone is enough to know the joined network is a hotspot.
+#[test]
+fn a_continuity_report_marks_the_joined_network_as_a_hotspot() {
+    let text = request(true, Some("Phone"), &network("Phone", -55, "")).replace(
+        "\"revealOther\":false",
+        &format!("\"revealOther\":false{}", with_peer("Phone", "5G", 80, 3)),
+    );
+    let output = render(&text);
+    assert!(output.connected_is_hotspot);
+    assert_eq!(output.connected_cell, Cell::FiveG);
+    assert_eq!(output.connected_battery, 80);
+    assert_eq!(rows(&output, Section::Hotspot).len(), 1);
+}
+
 // Rule E.1: the header only exists when a hotspot does.
 #[test]
 fn hotspot_header_is_absent_without_a_hotspot() {

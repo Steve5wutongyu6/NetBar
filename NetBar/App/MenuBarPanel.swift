@@ -42,6 +42,7 @@ final class MenuBarController: NSObject {
     private var refreshTimer: Timer?
     private var isWatchingContent = false
     private var authorizationObserver: NSObjectProtocol?
+    private var wakeObserver: NSObjectProtocol?
 
     init(store: WiFiStore) {
         self.store = store
@@ -51,6 +52,30 @@ final class MenuBarController: NSObject {
     deinit {
         if let authorizationObserver {
             NotificationCenter.default.removeObserver(authorizationObserver)
+        }
+        if let wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+        }
+        NBWiFiMonitor.shared().stop()
+    }
+
+    /// A radio event: re-read the state only, which needs no scan, then redraw.
+    private func radioDidChange() async {
+        await store.refresh(scan: false)
+        updateStatusItem()
+        if let panel, panel.isVisible {
+            resize(panel)
+            position(panel, under: anchorRect(for: panel))
+        }
+    }
+
+    /// A change big enough to rescan for, e.g. waking from sleep.
+    private func refreshEverything() async {
+        await store.refresh(scan: true)
+        updateStatusItem()
+        if let panel, panel.isVisible {
+            resize(panel)
+            position(panel, under: anchorRect(for: panel))
         }
     }
 
@@ -65,6 +90,24 @@ final class MenuBarController: NSObject {
 
         // Granting access from System Settings while NetBar runs must reach the
         // menu without reopening it.
+        // The radio reports its own changes, so the status item stays current
+        // whether or not the menu is open.
+        NBWiFiMonitor.shared().startObserving { [weak self] in
+            Task { @MainActor in
+                await self?.radioDidChange()
+            }
+        }
+        // Waking up can land on a different network entirely.
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.refreshEverything()
+            }
+        }
+
         authorizationObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name.NBLocationAuthorizationDidChange,
             object: nil,
