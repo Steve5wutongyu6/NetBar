@@ -307,6 +307,43 @@ fn strangers_show_a_lock_when_they_need_a_password() {
     assert_eq!(others[1].detail_kind, DetailKind::None);
 }
 
+// A hotspot whose name macOS withheld still gets its row, with its detail.
+#[test]
+fn unnamed_hotspot_still_appears_with_its_detail() {
+    let entries = "{\"ssid\":null,\"bssid\":\"AA:BB:CC:00:11:22\",\"rssi\":-61,\"known\":false,\
+\"personalHotspot\":true,\"hotspotNetwork\":2,\"hotspotBattery\":88}";
+    let output = render(&request(true, None, entries));
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 1);
+    assert_eq!(hotspot[0].title.as_deref(), Some("Not Nearby"));
+    assert!(hotspot[0].redacted);
+    assert_eq!(hotspot[0].id, "hotspot.AA:BB:CC:00:11:22");
+    assert_eq!(hotspot[0].cell, Cell::FiveG);
+    assert_eq!(hotspot[0].battery, 88);
+    assert_eq!(hotspot[0].strength, 3);
+}
+
+// An unnamed hotspot with no address cannot be identified, so it stays out.
+#[test]
+fn unnamed_hotspot_without_an_address_is_ignored() {
+    let entries = "{\"ssid\":null,\"rssi\":-61,\"known\":false,\"personalHotspot\":true,\
+\"hotspotNetwork\":2,\"hotspotBattery\":88}";
+    let output = render(&request(true, None, entries));
+    assert!(rows(&output, Section::Hotspot).is_empty());
+}
+
+// Two unnamed hotspots stay two rows: they are told apart by address.
+#[test]
+fn unnamed_hotspots_are_deduplicated_by_address() {
+    let one = "{\"ssid\":null,\"bssid\":\"AA:00\",\"rssi\":-61,\"known\":false,\"personalHotspot\":true,\"hotspotNetwork\":2}";
+    let same = "{\"ssid\":null,\"bssid\":\"AA:00\",\"rssi\":-70,\"known\":false,\"personalHotspot\":true,\"hotspotNetwork\":2}";
+    let other = "{\"ssid\":null,\"bssid\":\"BB:00\",\"rssi\":-65,\"known\":false,\"personalHotspot\":true,\"hotspotNetwork\":2}";
+    let output = render(&request(true, None, &format!("{one},{same},{other}")));
+    let hotspot = rows(&output, Section::Hotspot);
+    assert_eq!(hotspot.len(), 2);
+    assert_eq!(hotspot[0].rssi, -61);
+}
+
 // revealOther: unfolding shows everything and clears the counter.
 #[test]
 fn unfolding_reveals_every_network() {

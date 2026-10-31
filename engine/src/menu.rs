@@ -30,6 +30,8 @@ pub const MAX_KNOWN: usize = 3;
 pub const MAX_OTHER: usize = 2;
 /// Weakest signal a stranger shows while folded; below this it stays hidden.
 pub const RSSI_FLOOR: i64 = -78;
+/// Title used for a network macOS did not name.
+const REDACTED_TITLE: &str = "Not Nearby";
 
 /// Two names are the same ESSID when they match case-insensitively and after
 /// trimming. macOS treats SSIDs as case-sensitive, but a saved profile whose
@@ -109,13 +111,22 @@ pub fn build(input: &Input) -> Output {
             "Personal Hotspot",
         ));
         for network in hotspots {
-            let ssid = network.ssid.clone().unwrap_or_default();
-            let mut item = Item::network(Section::Hotspot, format!("hotspot.{ssid}"), &ssid);
+            // A hotspot whose name macOS withheld still earns a row: the beacon
+            // says what it is, and the detail columns carry signal, Cellular and
+            // battery, which is exactly what the section is for.
+            let named = network.ssid.clone();
+            let title = named.clone().unwrap_or_else(|| REDACTED_TITLE.to_owned());
+            let identity = named.clone().unwrap_or_else(|| network.identity());
+            let mut item = Item::network(Section::Hotspot, format!("hotspot.{identity}"), &title);
+            if named.is_none() {
+                item.ssid = None;
+                item.redacted = true;
+            }
             fill_signal(&mut item, network);
             item.detail_kind = DetailKind::AppleHotspot;
             item.cell = Cell::from_i64(network.hotspot_network);
             item.battery = clamp_battery(network.hotspot_battery);
-            item.is_joined = is_joined_name(input, &ssid);
+            item.is_joined = is_joined_name(input, named.as_deref().unwrap_or_default());
             output.items.push(item);
         }
     }
@@ -126,7 +137,7 @@ pub fn build(input: &Input) -> Output {
     if input.connected_name_redacted {
         // Rule E.3: the joined network's name is hidden; keep its slot without
         // inventing one. macOS shows whatever neighbour it can still see.
-        let mut item = Item::network(Section::Known, "known.redacted".to_owned(), "Not Nearby");
+        let mut item = Item::network(Section::Known, "known.redacted".to_owned(), REDACTED_TITLE);
         item.ssid = None;
         item.redacted = true;
         item.is_joined = true;
@@ -283,7 +294,7 @@ fn redacted_title(network: &Network, preferred: &[String]) -> Option<String> {
     preferred
         .iter()
         .any(|saved| *saved == normalize_name(service))
-        .then(|| "Not Nearby".to_owned())
+        .then(|| REDACTED_TITLE.to_owned())
 }
 
 fn is_joined_name(input: &Input, ssid: &str) -> bool {
@@ -316,6 +327,13 @@ fn clamp_battery(percent: i64) -> u8 {
     percent.clamp(0, 100) as u8
 }
 
+impl Network {
+    /// A stable identity for a network whose name is unavailable.
+    fn identity(&self) -> String {
+        self.bssid.clone().unwrap_or_default()
+    }
+}
+
 /// Strongest first, then by name so equally strong networks never swap places
 /// between refreshes.
 fn sort_by_signal(networks: &mut Vec<&Network>) {
@@ -332,7 +350,11 @@ fn sort_by_signal(networks: &mut Vec<&Network>) {
 fn collapse(networks: &[Network]) -> Vec<Network> {
     let mut collapsed: Vec<Network> = Vec::with_capacity(networks.len());
     for network in networks {
-        let has_identity = network.ssid.is_some() || network.service_name.is_some();
+        // An entry needs something to be identified by: a name, a saved profile
+        // that names it, or — for a hotspot the OS would not name — its BSSID.
+        let has_identity = network.ssid.is_some()
+            || network.service_name.is_some()
+            || (network.personal_hotspot && network.bssid.is_some());
         if !has_identity {
             continue;
         }
@@ -343,7 +365,12 @@ fn collapse(networks: &[Network]) -> Vec<Network> {
                     .as_deref()
                     .is_some_and(|name| normalize_name(name) == normalize_name(ssid))
             }),
-            None => None,
+            // Unnamed entries can only be told apart by their address.
+            None => collapsed.iter_mut().find(|existing| {
+                existing.ssid.is_none()
+                    && network.bssid.is_some()
+                    && existing.bssid == network.bssid
+            }),
         };
         match duplicate {
             Some(existing) if existing.rssi >= network.rssi => {}

@@ -11,6 +11,9 @@ pub const SCHEMA_VERSION: i64 = 1;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Network {
     pub ssid: Option<String>,
+    /// Hardware address, used as the fallback identity for an entry whose name
+    /// macOS withheld.
+    pub bssid: Option<String>,
     /// Saved-profile name this ESSID belongs to. CoreWLAN keeps profile names
     /// when macOS redacts SSIDs, so this survives without Location Services.
     pub service_name: Option<String>,
@@ -92,6 +95,7 @@ impl Network {
     fn decode(value: &Value) -> Self {
         Self {
             ssid: string_field(value, "ssid"),
+            bssid: string_field(value, "bssid"),
             service_name: string_field(value, "serviceName"),
             rssi: int_field(value, "rssi"),
             known: bool_field(value, "known"),

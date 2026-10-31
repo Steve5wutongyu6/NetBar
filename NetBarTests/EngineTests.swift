@@ -114,6 +114,24 @@ func redactedFixtureKeepsJoinedSlot() throws {
 }
 
 @MainActor
+@Test("With network names hidden, a nearby hotspot still gets a detailed row")
+func hiddenNamesKeepHotspotsVisible() throws {
+    // This is what an unsigned build sees: macOS redacts every name, but the
+    // hotspot beacons still describe themselves.
+    let output = store(fixture("hidden-names.json")).output
+
+    let hotspot = try #require(rows(output, .hotspot).first)
+    #expect(hotspot.title == "Not Nearby")
+    #expect(hotspot.redacted)
+    #expect(hotspot.detailKind == .appleHotspot)
+    #expect(hotspot.cell == .fiveG)
+    #expect(hotspot.battery == 88)
+    #expect(hotspot.strength == 3)
+    // Unnamed strangers without a saved profile cannot be listed.
+    #expect(rows(output, .other).isEmpty)
+}
+
+@MainActor
 @Test("With the radio off only the settings row remains")
 func powerOffCollapsesTheMenu() {
     let input = NBEngineInput()

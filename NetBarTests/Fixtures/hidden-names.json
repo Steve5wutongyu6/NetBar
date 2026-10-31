@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "powerOn": true,
+  "currentSSID": null,
+  "connectedNameRedacted": true,
+  "interfaceName": "en0",
+  "currentRSSI": -34,
+  "scanning": true,
+  "preferredNetworks": [],
+  "networks": [
+    {"ssid": null, "bssid": "AA:BB:CC:00:11:22", "rssi": -61, "known": false, "personalHotspot": true, "hotspotNetwork": 2, "hotspotBattery": 88},
+    {"ssid": null, "bssid": "11:22:33:44:55:66", "rssi": -34, "known": false, "personalHotspot": false, "hotspotNetwork": 0, "hotspotBattery": 0},
+    {"ssid": null, "bssid": "77:88:99:AA:BB:CC", "rssi": -72, "known": false, "personalHotspot": false, "hotspotNetwork": 0, "hotspotBattery": 0}
+  ]
+}
