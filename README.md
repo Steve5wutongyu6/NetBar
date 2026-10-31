@@ -1,6 +1,6 @@
 # NetBar
 
-功能:复刻 MacOS 原生 Wi-Fi 菜单,增加 MenuBar 热点蜂窝信号显示功能
+功能:复刻MacOS原生Wi-Fi菜单,增加MenuBar热点蜂窝信号显示功能
 
 ![菜单](docs/menu.png)
 
