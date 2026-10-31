@@ -1,0 +1,47 @@
+// NetBar — build settings shared by Debug and Release.
+//
+// Parser note: Xcode strips everything after a double slash on a line, so every
+// comment stays on one line, in ASCII, and never contains a scheme or path.
+
+// MARK::Identity
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app
+
+// MARK::Platform
+SDKROOT = macosx
+MACOSX_DEPLOYMENT_TARGET = 27.0
+SWIFT_VERSION = 5.0
+
+// MARK::Architectures
+ARCHS = arm64 x86_64
+ONLY_ACTIVE_ARCH = NO
+// Architectures the Rust engine is built for. Xcode narrows ARCHS to the active
+// destination while running script phases, so the engine cannot read it.
+NETBAR_ENGINE_ARCHS = arm64 x86_64
+ENABLE_USER_SCRIPT_SANDBOXING = NO
+
+// MARK::Rust triple per architecture
+NETBAR_RUST_TRIPLE[arch=arm64] = aarch64-apple-darwin
+NETBAR_RUST_TRIPLE[arch=arm64e] = aarch64-apple-darwin
+NETBAR_RUST_TRIPLE[arch=x86_64] = x86_64-apple-darwin
+
+// MARK::Build products
+CONFIGURATION_BUILD_DIR = $(PROJECT_DIR)/build/$(CONFIGURATION)
+SYMROOT = $(PROJECT_DIR)/build
+OBJROOT = $(PROJECT_DIR)/build/$(CONFIGURATION)/obj
+
+// MARK::Signing
+CODE_SIGN_IDENTITY[sdk=macosx*] = -
+CODE_SIGNING_REQUIRED = YES
+CODE_SIGNING_ALLOWED = YES
+ENABLE_HARDENED_RUNTIME = YES
+CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO
+
+// MARK::Diagnostics
+DEBUG_INFORMATION_FORMAT = dwarf
+DEBUG_INFORMATION_FORMAT[config=Release] = dwarf-with-dsym
+COPY_PHASE_STRIP = NO
+SWIFT_WARN_UNUSED_RESULT = YES
+GCC_WARN_UNDECLARED_SELECTOR = YES
+CLANG_WARN_DOCUMENTATION_COMMENTS = YES

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "powerOn": true,
+  "currentSSID": "吴同宇的iPhone",
+  "connectedNameRedacted": false,
+  "interfaceName": "en0",
+  "currentRSSI": -52,
+  "scanning": true,
+  "networks": [
+    {
+      "ssid": "吴同宇的iPhone",
+      "bssid": "AA:BB:CC:DD:EE:FF",
+      "rssi": -52,
+      "known": true,
+      "personalHotspot": true,
+      "hotspotNetwork": 1,
+      "hotspotBattery": 64,
+      "security": 4
+    },
+    {
+      "ssid": "自习室 3",
+      "bssid": "11:22:33:44:55:01",
+      "rssi": -58,
+      "known": true,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 4
+    },
+    {
+      "ssid": "自习室 2",
+      "bssid": "11:22:33:44:55:02",
+      "rssi": -81,
+      "known": true,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 3
+    },
+    {
+      "ssid": "自习室 3",
+      "bssid": "11:22:33:44:55:03",
+      "rssi": -74,
+      "known": true,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 4
+    },
+    {
+      "ssid": "Test&Co",
+      "bssid": null,
+      "rssi": -64,
+      "known": false,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 3
+    },
+    {
+      "ssid": "A\"quoted\"Net",
+      "bssid": null,
+      "rssi": -68,
+      "known": false,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 3
+    },
+    {
+      "ssid": "Cafe 2.4",
+      "bssid": null,
+      "rssi": -72,
+      "known": false,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 2
+    },
+    {
+      "ssid": "Neighbour#2",
+      "bssid": "99:AA:BB:CC:DD:01",
+      "rssi": -84,
+      "known": false,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 3
+    },
+    {
+      "ssid": "Neighbour#3",
+      "bssid": "99:AA:BB:CC:DD:02",
+      "rssi": -90,
+      "known": false,
+      "personalHotspot": false,
+      "hotspotNetwork": 0,
+      "hotspotBattery": 0,
+      "security": 0
+    }
+  ]
+}

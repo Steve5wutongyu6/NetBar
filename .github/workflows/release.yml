@@ -1,0 +1,104 @@
+# NetBar — release pipeline.
+#
+# Trigger policy: only a v* tag or a manual dispatch runs this workflow. Branch
+# pushes and pull requests never start it, so CI minutes are spent on releases
+# only.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Engine and app tests
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          components: clippy, rustfmt
+
+      - name: Select Xcode
+        run: |
+          set -euo pipefail
+          unset DEVELOPER_DIR || true
+          eval "$(Scripts/xcode-env.sh)"
+          echo "DEVELOPER_DIR=${DEVELOPER_DIR}" >> "${GITHUB_ENV}"
+          xcodebuild -version
+
+      - name: Tests
+        run: Scripts/test.sh
+
+      - name: Menu snapshot
+        run: |
+          set -euo pipefail
+          make snapshot
+          ls -l docs/menu.png
+
+      - name: Upload snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-snapshot
+          path: docs/menu.png
+          retention-days: 30
+
+      - name: Collect logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build/*.log
+            build/logs/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    name: Package and publish
+    runs-on: macos-latest
+    timeout-minutes: 60
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Select Xcode
+        run: |
+          set -euo pipefail
+          unset DEVELOPER_DIR || true
+          eval "$(Scripts/xcode-env.sh)"
+          echo "DEVELOPER_DIR=${DEVELOPER_DIR}" >> "${GITHUB_ENV}"
+          xcodebuild -version
+
+      - name: Package
+        run: Scripts/package.sh "${GITHUB_REF_NAME}"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
+          draft: false

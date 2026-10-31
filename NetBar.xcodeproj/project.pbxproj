@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FAD0C93F535178951529DEC4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */; };
+		3A99BB4F6783157BE95AFB7E /* EngineBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */; };
+		51BD2A95DD40C27DFCF05753 /* MenuBarPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */; };
+		808DFBBC44CA017C1E8D2D3F /* MenuRowViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */; };
+		6E02969E7AEAD70F7D5FC627 /* NetBarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D92E31796459AA83E65C68 /* NetBarApp.swift */; };
+		F1724287DEE4D1B92B3CCD0C /* SnapshotRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C705242917563A737ACD3B /* SnapshotRenderer.swift */; };
+		999F67CA2DA33F3F18E42691 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F2ED2D5A7FC548A5C0CECD /* WiFiIcon.swift */; };
+		F2DCA726C6B8D954787DEF87 /* WiFiStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC888CE685AFE874B34AE892 /* WiFiStore.swift */; };
+		E1CCF4EA29BEFD7D8AA99510 /* NBWiFiBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */; };
+		3F44490F226C4F7C418A08B5 /* NBWiFiHotspot.m in Sources */ = {isa = PBXBuildFile; fileRef = 9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */; };
+		66292D1E0A29377E7485310A /* NBWiFiModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */; };
+		2BB0A9234B33AA0EBEA28C2F /* NBNodeJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 6271CCAF8DFAB0FAA7056155 /* NBNodeJSON.m */; };
+		997EE92F8765E56206DF172A /* EngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA52C21F8595F38CC861F4AF /* EngineTests.swift */; };
+		C5584690FA0842156CF0199B /* HotspotDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E73E1622645477AFB7F8811 /* HotspotDecodingTests.swift */; };
+		8F6673B6317ED2948D18DA34 /* MenuRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27530FFEF7C405648810FEB /* MenuRenderTests.swift */; };
+		62B797D8B3D61AC8270F1E86 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = 208DDC571D2E76B904CE311C /* Fixtures */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		09533ED0540B1BABD99470F6 = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 31D6AF4B1699A4CF5E40A4C0;
+			proxyType = 1;
+			remoteGlobalIDString = 2A532BEBE2F1140003AD6FD3;
+			remoteInfo = NetBar;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1E067BF8D97606C99F8B8D4D /* NetBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5455FD3870DD971346CE1802 /* NetBarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetBarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineBridge.swift; sourceTree = "<group>"; };
+		C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPanel.swift; sourceTree = "<group>"; };
+		B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuRowViews.swift; sourceTree = "<group>"; };
+		E8D92E31796459AA83E65C68 /* NetBarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetBarApp.swift; sourceTree = "<group>"; };
+		52C705242917563A737ACD3B /* SnapshotRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotRenderer.swift; sourceTree = "<group>"; };
+		F7F2ED2D5A7FC548A5C0CECD /* WiFiIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiIcon.swift; sourceTree = "<group>"; };
+		AC888CE685AFE874B34AE892 /* WiFiStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiStore.swift; sourceTree = "<group>"; };
+		6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiBridge.m; sourceTree = "<group>"; };
+		9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiHotspot.m; sourceTree = "<group>"; };
+		23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBWiFiModels.m; sourceTree = "<group>"; };
+		6271CCAF8DFAB0FAA7056155 /* NBNodeJSON.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NBNodeJSON.m; sourceTree = "<group>"; };
+		2D5BE0E4E3BFF659C18E1682 /* NetBar-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetBar-Bridging-Header.h; sourceTree = "<group>"; };
+		A975637496F0B68519C55BD8 /* NBWiFiBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiBridge.h; sourceTree = "<group>"; };
+		CF11E2AEB83E64A6CF7059EF /* NBWiFiHotspot.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiHotspot.h; sourceTree = "<group>"; };
+		44B0D24B19FB2DD78BFCF32B /* NBWiFiModels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBWiFiModels.h; sourceTree = "<group>"; };
+		562A94BCB9663038A15C3E8B /* NBEngineExports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBEngineExports.h; sourceTree = "<group>"; };
+		C3DA496DBB39706D6FACCF3B /* NBNodeJSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBNodeJSON.h; sourceTree = "<group>"; };
+		DA52C21F8595F38CC861F4AF /* EngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineTests.swift; sourceTree = "<group>"; };
+		1E73E1622645477AFB7F8811 /* HotspotDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotspotDecodingTests.swift; sourceTree = "<group>"; };
+		C27530FFEF7C405648810FEB /* MenuRenderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuRenderTests.swift; sourceTree = "<group>"; };
+		38DE5E851FE769D8E19814AE /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
+		8106CB2DB77D840F47A41D18 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Configs/Debug.xcconfig; sourceTree = "<group>"; };
+		E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Configs/Release.xcconfig; sourceTree = "<group>"; };
+		208DDC571D2E76B904CE311C /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fixtures; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		04A21900BB3D09D32F49F4A6 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8536FB3427A2114880439A69 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3058ECC98E948C757F844F63 = {
+			isa = PBXGroup;
+			children = (
+				235A4CAEFF04ADA4BCC0C721,
+				7D14B10EA1E0F9D89C8AA22C,
+				4F175312918213ACEB351E5B,
+				BF424244167E8D0B6921394F,
+				C7E63C943678FF28603B8069,
+			);
+			sourceTree = "<group>";
+		};
+		C7E63C943678FF28603B8069 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E067BF8D97606C99F8B8D4D /* NetBar.app */,
+				5455FD3870DD971346CE1802 /* NetBarTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		235A4CAEFF04ADA4BCC0C721 /* NetBar */ = {
+			isa = PBXGroup;
+			children = (
+				37ADB95A5240A7BFEF5BD02F,
+				63F08847F2BD2E269B3FEEAD,
+				2D5BE0E4E3BFF659C18E1682 /* NetBar-Bridging-Header.h */,
+			);
+			path = NetBar;
+			sourceTree = "<group>";
+		};
+		37ADB95A5240A7BFEF5BD02F /* App */ = {
+			isa = PBXGroup;
+			children = (
+				7EB2FB440B1DF6D08C181094 /* AppDelegate.swift */,
+				D7EA006AF00F6FA3C8039A00 /* EngineBridge.swift */,
+				C7DADA1C19C002BB4BC2D992 /* MenuBarPanel.swift */,
+				B68420BDD8E322D4084D13F9 /* MenuRowViews.swift */,
+				E8D92E31796459AA83E65C68 /* NetBarApp.swift */,
+				52C705242917563A737ACD3B /* SnapshotRenderer.swift */,
+				F7F2ED2D5A7FC548A5C0CECD /* WiFiIcon.swift */,
+				AC888CE685AFE874B34AE892 /* WiFiStore.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		63F08847F2BD2E269B3FEEAD /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				6B3DD61AA4681E55E936E448 /* NBWiFiBridge.m */,
+				9084013EEF5C7756AE2C5B56 /* NBWiFiHotspot.m */,
+				23DFB661D69B8C0B9A21660B /* NBWiFiModels.m */,
+				A975637496F0B68519C55BD8 /* NBWiFiBridge.h */,
+				CF11E2AEB83E64A6CF7059EF /* NBWiFiHotspot.h */,
+				44B0D24B19FB2DD78BFCF32B /* NBWiFiModels.h */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
+		7D14B10EA1E0F9D89C8AA22C /* Contracts */ = {
+			isa = PBXGroup;
+			children = (
+				6271CCAF8DFAB0FAA7056155 /* NBNodeJSON.m */,
+				562A94BCB9663038A15C3E8B /* NBEngineExports.h */,
+				C3DA496DBB39706D6FACCF3B /* NBNodeJSON.h */,
+			);
+			path = Contracts;
+			sourceTree = "<group>";
+		};
+		4F175312918213ACEB351E5B /* NetBarTests */ = {
+			isa = PBXGroup;
+			children = (
+				DA52C21F8595F38CC861F4AF /* EngineTests.swift */,
+				1E73E1622645477AFB7F8811 /* HotspotDecodingTests.swift */,
+				C27530FFEF7C405648810FEB /* MenuRenderTests.swift */,
+				208DDC571D2E76B904CE311C /* Fixtures */,
+			);
+			path = NetBarTests;
+			sourceTree = "<group>";
+		};
+		BF424244167E8D0B6921394F /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				38DE5E851FE769D8E19814AE /* Shared.xcconfig */,
+				8106CB2DB77D840F47A41D18 /* Debug.xcconfig */,
+				E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */,
+			);
+			name = Configs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2A532BEBE2F1140003AD6FD3 /* NetBar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B8E11AB16703DFEC1711483D;
+			buildPhases = (
+				5CF43930F4E6ED2F0A723D5B /* Build Rust Engine */,
+				A98064DC68719ED23A11A5C7 /* Sources */,
+				04A21900BB3D09D32F49F4A6 /* Frameworks */,
+				8BB0BBD7CEBB030D6AB56C8E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NetBar;
+			productName = NetBar;
+			productReference = 1E067BF8D97606C99F8B8D4D /* NetBar.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6A58A85E6C195FB2D223A5ED /* NetBarTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9DEF4EFB463BDE5C59908BB5;
+			buildPhases = (
+				C198CBEE4C33CD759D5BEB66 /* Sources */,
+				8536FB3427A2114880439A69 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9BB0E49141FC964115466FA7 /* PBXTargetDependency */,
+			);
+			name = NetBarTests;
+			productName = NetBarTests;
+			productReference = 5455FD3870DD971346CE1802 /* NetBarTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		31D6AF4B1699A4CF5E40A4C0 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					2A532BEBE2F1140003AD6FD3 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					6A58A85E6C195FB2D223A5ED = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 2A532BEBE2F1140003AD6FD3;
+					};
+				};
+			};
+			buildConfigurationList = 67D9612C6D5AE69B7EE7340A;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3058ECC98E948C757F844F63;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C7E63C943678FF28603B8069 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2A532BEBE2F1140003AD6FD3 /* NetBar */,
+				6A58A85E6C195FB2D223A5ED /* NetBarTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8BB0BBD7CEBB030D6AB56C8E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				62B797D8B3D61AC8270F1E86 /* Fixtures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5CF43930F4E6ED2F0A723D5B /* Build Rust Engine */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Engine";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\"$SRCROOT/Scripts/build-rust.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A98064DC68719ED23A11A5C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FAD0C93F535178951529DEC4 /* AppDelegate.swift in Sources */,
+				3A99BB4F6783157BE95AFB7E /* EngineBridge.swift in Sources */,
+				51BD2A95DD40C27DFCF05753 /* MenuBarPanel.swift in Sources */,
+				808DFBBC44CA017C1E8D2D3F /* MenuRowViews.swift in Sources */,
+				6E02969E7AEAD70F7D5FC627 /* NetBarApp.swift in Sources */,
+				F1724287DEE4D1B92B3CCD0C /* SnapshotRenderer.swift in Sources */,
+				999F67CA2DA33F3F18E42691 /* WiFiIcon.swift in Sources */,
+				F2DCA726C6B8D954787DEF87 /* WiFiStore.swift in Sources */,
+				E1CCF4EA29BEFD7D8AA99510 /* NBWiFiBridge.m in Sources */,
+				3F44490F226C4F7C418A08B5 /* NBWiFiHotspot.m in Sources */,
+				66292D1E0A29377E7485310A /* NBWiFiModels.m in Sources */,
+				2BB0A9234B33AA0EBEA28C2F /* NBNodeJSON.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C198CBEE4C33CD759D5BEB66 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				997EE92F8765E56206DF172A /* EngineTests.swift in Sources */,
+				C5584690FA0842156CF0199B /* HotspotDecodingTests.swift in Sources */,
+				8F6673B6317ED2948D18DA34 /* MenuRenderTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9BB0E49141FC964115466FA7 = {
+			isa = PBXTargetDependency;
+			target = 2A532BEBE2F1140003AD6FD3 /* NetBar */;
+			targetProxy = 09533ED0540B1BABD99470F6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		FB10A660501666A7641B8C3C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8106CB2DB77D840F47A41D18 /* Debug.xcconfig */;
+			buildSettings = {
+				MARKETING_VERSION = 1.0.0;
+				CURRENT_PROJECT_VERSION = 1;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				SWIFT_VERSION = 5.0;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+			};
+			name = Debug;
+		};
+		029850EBE62814E056E616C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */;
+			buildSettings = {
+				MARKETING_VERSION = 1.0.0;
+				CURRENT_PROJECT_VERSION = 1;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				SWIFT_VERSION = 5.0;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+			};
+			name = Release;
+		};
+		E7B6CEF5711F93EBD314A4EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8106CB2DB77D840F47A41D18 /* Debug.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "$(SRCROOT)/NetBar/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/NetBar/NetBar-Bridging-Header.h";
+				HEADER_SEARCH_PATHS = ("$(SRCROOT)/NetBar/Bridge", "$(SRCROOT)/Contracts");
+				LIBRARY_SEARCH_PATHS = ("$(NETBAR_ENGINE_LIB_DIR)");
+				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
+				ENABLE_APP_SANDBOX = NO;
+				ARCHS = "arm64 x86_64";
+				ENABLE_HARDENED_RUNTIME = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		5273D1DAE51D7BAEA2ADAF7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "$(SRCROOT)/NetBar/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/NetBar/NetBar-Bridging-Header.h";
+				HEADER_SEARCH_PATHS = ("$(SRCROOT)/NetBar/Bridge", "$(SRCROOT)/Contracts");
+				LIBRARY_SEARCH_PATHS = ("$(NETBAR_ENGINE_LIB_DIR)");
+				OTHER_LDFLAGS = ("-lnetbar_engine", "-lc++", "-lresolv", "-framework", "AppKit", "-framework", "CoreWLAN", "-framework", "Foundation", "-framework", "Security");
+				ENABLE_APP_SANDBOX = NO;
+				ARCHS = "arm64 x86_64";
+				ENABLE_HARDENED_RUNTIME = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = Release;
+		};
+		3A02D573145CFC2A66E5E9E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8106CB2DB77D840F47A41D18 /* Debug.xcconfig */;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NetBar.app/Contents/MacOS/NetBar";
+				SWIFT_VERSION = 5.0;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ARCHS = "arm64 x86_64";
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		BA1762906DBB0E5544485031 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E19B4E6B5ED1227B13BACB49 /* Release.xcconfig */;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NetBar.app/Contents/MacOS/NetBar";
+				SWIFT_VERSION = 5.0;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ARCHS = "arm64 x86_64";
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		67D9612C6D5AE69B7EE7340A /* Build configuration list for PBXProject "NetBar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB10A660501666A7641B8C3C /* Debug */,
+				029850EBE62814E056E616C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B8E11AB16703DFEC1711483D /* Build configuration list for PBXNativeTarget "NetBar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E7B6CEF5711F93EBD314A4EB /* Debug */,
+				5273D1DAE51D7BAEA2ADAF7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9DEF4EFB463BDE5C59908BB5 /* Build configuration list for PBXNativeTarget "NetBarTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A02D573145CFC2A66E5E9E1 /* Debug */,
+				BA1762906DBB0E5544485031 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 31D6AF4B1699A4CF5E40A4C0;
+}

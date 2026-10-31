@@ -1,0 +1,15 @@
+build/
+dist/
+engine/target/
+DerivedData/
+*.xcresult
+*.xcarchive
+*.dSYM
+xcuserdata/
+*.xcuserstate
+NetBar.xcodeproj/project.xcworkspace/xcuserdata/
+.DS_Store
+._*
+*.log
+*.profraw
+hud-snapshots/

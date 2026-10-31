@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "powerOn": true,
+  "currentSSID": null,
+  "connectedNameRedacted": true,
+  "interfaceName": "en0",
+  "currentRSSI": -61,
+  "scanning": true,
+  "networks": [
+    {
+      "ssid": "吴同宇的iPhone",
+      "rssi": -58,
+      "known": false,
+      "personalHotspot": true,
+      "hotspotNetwork": 2,
+      "hotspotBattery": 38,
+      "security": 3
+    },
+    {
+      "ssid": "自习室 3",
+      "rssi": -44,
+      "known": true,
+      "security": 4
+    },
+    {
+      "ssid": "Company-WiFi",
+      "rssi": -70,
+      "known": false,
+      "security": 3
+    },
+    {
+      "ssid": "Guest",
+      "rssi": -79,
+      "known": false,
+      "security": 3
+    },
+    {
+      "ssid": "Guest2",
+      "rssi": -85,
+      "known": false,
+      "security": 3
+    }
+  ]
+}
