@@ -165,31 +165,44 @@ final class MenuBarController: NSObject {
         openSystemWiFiMenu()
     }
 
-    /// Hands the click to the system. The bridge drives the menu through
-    /// Accessibility, so it runs off the main actor and never moves the pointer.
-    /// Without the grant there is nothing to open, so the panel explains that
-    /// rather than letting the click go nowhere.
+    /// Hands the click to the system. The bridge blocks for as long as a menu takes
+    /// to open, so it runs on a worker thread and the answer is handed back here.
+    /// Nothing else about the controller crosses over, which keeps the concurrency
+    /// checks happy on both the newest and the oldest toolchains this ships to.
     private func openSystemWiFiMenu() {
         panel?.dismiss()
-        Task.detached(priority: .userInitiated) { [weak self] in
-            let outcome = NBSystemWiFiMenu.openSystemWiFiMenu()
-            await MainActor.run {
-                guard let self else { return }
-                switch outcome {
-                    case .opened:
-                        break
-                    case .notPermitted:
-                        // The prompt is the ask; the pane is where the answer lives
-                        // once the prompt has been dismissed for good.
-                        _ = NBSystemWiFiMenu.requestPermission()
-                        NBSystemWiFiMenu.openAccessibilitySettings()
-                        self.showPanel()
-                    case .noMenuBarItem, .noWiFiControl:
-                        self.showPanel()
-                    @unknown default:
-                        break
-                }
+        Task {
+            let outcome = await Self.openSystemWiFiMenuOffMainThread()
+            systemWiFiMenuDidFinish(outcome)
+        }
+    }
+
+    /// The bridge, run away from the main actor.
+    private nonisolated static func openSystemWiFiMenuOffMainThread() async -> NBSystemWiFiMenuOutcome {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: NBSystemWiFiMenu.openSystemWiFiMenu())
             }
+        }
+    }
+
+    /// What the click managed to do, back on the main actor. Without the grant
+    /// there is nothing to open, so the panel explains that rather than letting the
+    /// click go nowhere.
+    private func systemWiFiMenuDidFinish(_ outcome: NBSystemWiFiMenuOutcome) {
+        switch outcome {
+            case .opened:
+                break
+            case .notPermitted:
+                // The prompt is the ask; the pane is where the answer lives once
+                // the prompt has been dismissed for good.
+                _ = NBSystemWiFiMenu.requestPermission()
+                NBSystemWiFiMenu.openAccessibilitySettings()
+                showPanel()
+            case .noMenuBarItem, .noWiFiControl:
+                showPanel()
+            @unknown default:
+                break
         }
     }
 
