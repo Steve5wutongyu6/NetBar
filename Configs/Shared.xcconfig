@@ -4,7 +4,7 @@
 // comment stays on one line, in ASCII, and never contains a scheme or path.
 
 // MARK::Identity
-MARKETING_VERSION = 1.0.7
+MARKETING_VERSION = 1.0.8
 CURRENT_PROJECT_VERSION = 1
 PRODUCT_BUNDLE_IDENTIFIER = dev.netbar.app
 
