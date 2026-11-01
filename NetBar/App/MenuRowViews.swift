@@ -29,6 +29,10 @@ struct MenuPanelView: View {
     /// change while NetBar runs. Defaulted so the snapshot renderer draws the
     /// panel without the permission row.
     var systemMenuPermitted: Bool = true
+    /// Whether macOS starts NetBar at login. Also refreshed on every open, because
+    /// the login item can be changed from System Settings while it is closed.
+    var launchAtLogin: Bool = false
+    var onToggleLaunchAtLogin: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -44,12 +48,22 @@ struct MenuPanelView: View {
             FooterSeparator()
             if !systemMenuPermitted {
                 // A plain click on the status item opens the system menu now, so a
-                // missing grant is the first thing the panel should explain.
-                SettingsLinkRow(title: "Allow NetBar to Open the Wi-Fi Menu...") {
-                    _ = NBSystemWiFiMenu.requestPermission()
-                    NBSystemWiFiMenu.openAccessibilitySettings()
+                // missing grant is the first thing the panel should explain. The
+                // row only opens the pane; asking again here would be the nag this
+                // release removes.
+                // The tooltip names the copy to authorize: macOS keeps one entry
+                // per binary, so an update leaves a ticked row that no longer
+                // matches and the new build has to be authorized again.
+                SettingsLinkRow(
+                    title: "Allow NetBar to Open the Wi-Fi Menu...",
+                    help: "Authorize the copy at \(AccessibilityPermission.bundlePath). "
+                        + "macOS ties the grant to the binary, so after an update the old "
+                        + "ticked entry no longer applies: remove it and add this one."
+                ) {
+                    AccessibilityPermission.openSettings()
                 }
             }
+            ToggleRow(title: "Launch at Login", isOn: launchAtLogin, action: onToggleLaunchAtLogin)
             if store.namesUnavailable {
                 // Only shown when macOS actually withheld the names; elsewhere
                 // the panel stays silent about privacy.
@@ -351,9 +365,38 @@ private struct OtherNetworksRow: View {
     }
 }
 
+/// A row that reports a two-state setting and flips it when clicked.
+private struct ToggleRow: View {
+    let title: String
+    let isOn: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 13))
+                Spacer(minLength: 6)
+                if isOn {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+            }
+            .padding(.horizontal, MenuMetrics.textPadding)
+            .frame(height: MenuMetrics.rowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, MenuMetrics.innerPadding)
+        .rowHover()
+        .accessibilityLabel(isOn ? "\(title), on" : "\(title), off")
+    }
+}
+
 /// The settings row at the foot of the menu.
 private struct SettingsLinkRow: View {
     let title: String
+    var help: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -368,6 +411,7 @@ private struct SettingsLinkRow: View {
         .buttonStyle(.plain)
         .padding(.horizontal, MenuMetrics.innerPadding)
         .rowHover()
+        .help(help ?? "")
     }
 }
 

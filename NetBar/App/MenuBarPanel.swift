@@ -40,6 +40,7 @@ final class MenuBarController: NSObject {
     private var hostingView: NSHostingView<AnyView>?
     private var dismissMonitor: Any?
     private var refreshTimer: Timer?
+    private var permissionTimer: Timer?
     private var isWatchingContent = false
     private var authorizationObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
@@ -91,12 +92,15 @@ final class MenuBarController: NSObject {
         statusItem = item
         updateStatusItem()
 
+        // Launch at login is on by default: the first run turns it on and later
+        // runs leave whatever the user chose alone.
+        LoginItem.registerOnFirstLaunch()
+
         // A plain click opens the system menu, and that needs the Accessibility
-        // grant. Asking at launch means the first click works instead of being how
-        // the user finds out the grant is missing.
-        if !NBSystemWiFiMenu.isPermitted() {
-            _ = NBSystemWiFiMenu.requestPermission()
-        }
+        // grant. The ask happens once per version: repeating it on every launch is
+        // what made a missing grant feel like nagging, and after an update the new
+        // signature would prompt again even though the user already answered.
+        AccessibilityPermission.askOnceForThisVersion()
         Task { await store.refresh(scan: true) }
 
         // Granting access from System Settings while NetBar runs must reach the
@@ -209,16 +213,16 @@ final class MenuBarController: NSObject {
     private func showPanel() {
         let panel = panel ?? makePanel()
         self.panel = panel
-        // A grant can arrive while NetBar runs, and the panel carries a row for
-        // it, so the root view is rebuilt on every open rather than once.
-        hostingView?.rootView = AnyView(
-            MenuPanelView(store: store, systemMenuPermitted: NBSystemWiFiMenu.isPermitted())
-        )
+        // Both rows in the panel can change while it is closed — the grant, and the
+        // login item if it was edited in System Settings — so the root view is
+        // rebuilt on every open rather than once.
+        hostingView?.rootView = makePanelRoot()
         guard let button = statusItem?.button, let window = button.window else { return }
         button.highlight(true)
         panel.onDismiss = { [weak self] in
             self?.statusItem?.button?.highlight(false)
             self?.stopRefreshTimer()
+            self?.stopPermissionWatch()
             self?.removeDismissMonitor()
         }
 
@@ -229,8 +233,47 @@ final class MenuBarController: NSObject {
             position(panel, under: window.convertToScreen(button.convert(button.bounds, to: nil)))
             panel.makeKeyAndOrderFront(nil)
             startRefreshTimerIfNeeded()
+            startPermissionWatchIfNeeded()
             watchContentChanges()
         }
+    }
+
+    /// The panel's content, rebuilt whenever something it reports may have changed.
+    private func makePanelRoot() -> AnyView {
+        AnyView(
+            MenuPanelView(
+                store: store,
+                systemMenuPermitted: AccessibilityPermission.isGranted,
+                launchAtLogin: LoginItem.isEnabled,
+                onToggleLaunchAtLogin: { [weak self] in self?.toggleLaunchAtLogin() }
+            )
+        )
+    }
+
+    /// Flips launch at login, then re-reads it: macOS is the authority, and a build
+    /// directory cannot be registered at all.
+    private func toggleLaunchAtLogin() {
+        LoginItem.setEnabled(!LoginItem.isEnabled)
+        hostingView?.rootView = makePanelRoot()
+    }
+
+    /// Watches for the grant arriving while the panel is open, so the row goes away
+    /// as soon as the box is ticked in System Settings.
+    private func startPermissionWatchIfNeeded() {
+        stopPermissionWatch()
+        guard !AccessibilityPermission.isGranted else { return }
+        permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, AccessibilityPermission.isGranted else { return }
+                self.stopPermissionWatch()
+                self.hostingView?.rootView = self.makePanelRoot()
+            }
+        }
+    }
+
+    private func stopPermissionWatch() {
+        permissionTimer?.invalidate()
+        permissionTimer = nil
     }
 
     private func makePanel() -> MenuPanel {
@@ -249,7 +292,7 @@ final class MenuBarController: NSObject {
         panel.hidesOnDeactivate = false
         panel.isMovable = false
 
-        let host = NSHostingView(rootView: AnyView(MenuPanelView(store: store)))
+        let host = NSHostingView(rootView: makePanelRoot())
         host.frame = NSRect(x: 0, y: 0, width: MenuMetrics.width, height: 200)
         panel.contentView = host
         hostingView = host

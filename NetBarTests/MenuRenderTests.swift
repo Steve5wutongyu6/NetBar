@@ -38,8 +38,12 @@ func sampleRenders() async throws {
 
     #expect(image.pixelsWide > 0)
     #expect(image.pixelsHigh > 0)
-    // A menu is wider than it is tall.
-    #expect(CGFloat(image.pixelsWide) / CGFloat(image.pixelsHigh) > 1)
+    // The panel is exactly the menu's width; only the height follows the rows, and
+    // the footer has grown with the settings it now carries. So the useful checks
+    // are that the width matches and that there is room for more than a header.
+    let scale = CGFloat(image.pixelsWide) / MenuMetrics.width
+    #expect(scale >= 1)
+    #expect(CGFloat(image.pixelsHigh) / scale > MenuMetrics.rowHeight * 3)
     let png = try pngData(store)
     let data = try #require(png)
     #expect(data.count > 2_000)
