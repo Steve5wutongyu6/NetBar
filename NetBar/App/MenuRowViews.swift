@@ -78,6 +78,13 @@ struct MenuPanelView: View {
                     NBWiFiBridge.openWiFiSettings()
                 }
             }
+            // An accessory app has no Dock tile and no menu bar menu, so without
+            // this row the only way out is Activity Monitor. Updating the app in
+            // place also leaves the old process running, and quitting is what makes
+            // the new bundle take effect.
+            SettingsLinkRow(title: "Quit NetBar") {
+                NSApp.terminate(nil)
+            }
         }
         .padding(.vertical, MenuMetrics.innerPadding)
         .frame(width: MenuMetrics.width)

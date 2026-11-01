@@ -4,4 +4,4 @@ version = 4
 
 [[package]]
 name = "netbar_engine"
-version = "1.0.6"
+version = "1.0.7"
