@@ -33,6 +33,7 @@ SOURCES = [
     ("NetBar/Bridge/NBHotspotMonitor.m", "Bridge"),
     ("NetBar/Bridge/NBWiFiMonitor.m", "Bridge"),
     ("NetBar/Bridge/NBLocationAuthorizer.m", "Bridge"),
+    ("NetBar/Bridge/NBSystemWiFiMenu.m", "Bridge"),
     ("Contracts/NBNodeJSON.m", "Contracts"),
 ]
 
@@ -44,6 +45,7 @@ HEADERS = [
     ("NetBar/Bridge/NBHotspotMonitor.h", "Bridge"),
     ("NetBar/Bridge/NBWiFiMonitor.h", "Bridge"),
     ("NetBar/Bridge/NBLocationAuthorizer.h", "Bridge"),
+    ("NetBar/Bridge/NBSystemWiFiMenu.h", "Bridge"),
     ("Contracts/NBEngineExports.h", "Contracts"),
     ("Contracts/NBNodeJSON.h", "Contracts"),
 ]

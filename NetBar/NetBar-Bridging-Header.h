@@ -8,5 +8,6 @@
 #import "NBHotspotMonitor.h"
 #import "NBWiFiMonitor.h"
 #import "NBLocationAuthorizer.h"
+#import "NBSystemWiFiMenu.h"
 #import "NBEngineExports.h"
 #import "NBNodeJSON.h"

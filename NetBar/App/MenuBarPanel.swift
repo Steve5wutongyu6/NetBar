@@ -143,11 +143,43 @@ final class MenuBarController: NSObject {
         }
     }
 
+    /// The status item's action. Option-click asks macOS for its own Wi-Fi menu
+    /// instead of opening the replica, which is the one thing the panel cannot
+    /// provide: the menu belongs to the system, not to NetBar.
     @objc private func togglePanel() {
+        if NSEvent.modifierFlags.contains(.option) {
+            openSystemWiFiMenu()
+            return
+        }
         if panel?.isVisible == true {
             panel?.dismiss()
         } else {
             showPanel()
+        }
+    }
+
+    /// Hands the click to the system. The bridge waits on menus appearing, so it
+    /// runs off the main actor; a missing Accessibility grant sends the user to
+    /// the pane that fixes it.
+    private func openSystemWiFiMenu() {
+        panel?.dismiss()
+        Task.detached(priority: .userInitiated) {
+            let outcome = NBSystemWiFiMenu.openSystemWiFiMenu()
+            await MainActor.run {
+                switch outcome {
+                    case .opened:
+                        break
+                    case .notPermitted:
+                        _ = NBSystemWiFiMenu.requestPermission()
+                        NBSystemWiFiMenu.openAccessibilitySettings()
+                    case .noMenuBarItem, .noWiFiControl:
+                        // The system menu is unreachable, so the settings pane is
+                        // the closest thing this app can still offer.
+                        NBWiFiBridge.openWiFiSettings()
+                    @unknown default:
+                        break
+                }
+            }
         }
     }
 
