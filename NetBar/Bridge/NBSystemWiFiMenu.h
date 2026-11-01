@@ -2,18 +2,22 @@
 //  NBSystemWiFiMenu.h
 //  NetBar
 //
-//  Handing a click to the Wi-Fi menu macOS itself puts in the menu bar.
+//  Opening the Wi-Fi menu macOS itself puts in the menu bar.
 //
 //  macOS 27 keeps every status item in one window owned by MenuBarAgent, and the
-//  Wi-Fi control lives inside the Control Center item's dropdown. The Accessibility
-//  actions those items advertise (\c AXShowMenu, \c AXPress) return success and do
-//  nothing at all, so the only route that works is the one the user takes: a real
-//  click on the real item. This bridge finds the item through Accessibility and
-//  delivers that click as a synthetic mouse event.
+//  Wi-Fi control lives inside the Control Center item's dropdown. Driving those
+//  items turns on two facts that are easy to get wrong:
 //
-//  Both halves need the process to be trusted for the Accessibility API; there is
-//  no private interface that avoids the permission. Callers therefore check
-//  \c isPermitted first and send the user to System Settings when it is NO.
+//    * \c AXShowMenu returns success on them and does nothing. Only \c AXPress and
+//      the tile's own "show details" action have an effect.
+//    * \c AXPress on the Wi-Fi tile is the radio switch, not the submenu. This
+//      bridge never calls it; the tile is only ever expanded.
+//
+//  Nothing here synthesises input, so the pointer stays where the user left it.
+//
+//  The grant is needed either way: there is no private interface that avoids the
+//  Accessibility permission. Callers check \c isPermitted first and send the user
+//  to System Settings when it is NO.
 //
 //  The calls block for up to two seconds while a menu opens, so they must not run
 //  on the main thread.

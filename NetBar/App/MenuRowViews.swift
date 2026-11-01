@@ -24,6 +24,11 @@ enum MenuMetrics {
 /// The menu itself: header, sections, footer.
 struct MenuPanelView: View {
     let store: WiFiStore
+    /// Whether macOS granted the Accessibility permission the system Wi-Fi menu
+    /// needs. The controller refreshes it on every open, because the answer can
+    /// change while NetBar runs. Defaulted so the snapshot renderer draws the
+    /// panel without the permission row.
+    var systemMenuPermitted: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -37,6 +42,14 @@ struct MenuPanelView: View {
                 row.content
             }
             FooterSeparator()
+            if !systemMenuPermitted {
+                // A plain click on the status item opens the system menu now, so a
+                // missing grant is the first thing the panel should explain.
+                SettingsLinkRow(title: "Allow NetBar to Open the Wi-Fi Menu...") {
+                    _ = NBSystemWiFiMenu.requestPermission()
+                    NBSystemWiFiMenu.openAccessibilitySettings()
+                }
+            }
             if store.namesUnavailable {
                 // Only shown when macOS actually withheld the names; elsewhere
                 // the panel stays silent about privacy.

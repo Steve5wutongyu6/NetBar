@@ -90,6 +90,13 @@ final class MenuBarController: NSObject {
         item.button?.sendAction(on: [.leftMouseUp])
         statusItem = item
         updateStatusItem()
+
+        // A plain click opens the system menu, and that needs the Accessibility
+        // grant. Asking at launch means the first click works instead of being how
+        // the user finds out the grant is missing.
+        if !NBSystemWiFiMenu.isPermitted() {
+            _ = NBSystemWiFiMenu.requestPermission()
+        }
         Task { await store.refresh(scan: true) }
 
         // Granting access from System Settings while NetBar runs must reach the
@@ -143,39 +150,42 @@ final class MenuBarController: NSObject {
         }
     }
 
-    /// The status item's action. Option-click asks macOS for its own Wi-Fi menu
-    /// instead of opening the replica, which is the one thing the panel cannot
-    /// provide: the menu belongs to the system, not to NetBar.
+    /// The status item's action. A plain click opens the menu macOS owns, which is
+    /// what people expect to find there; Option-click opens the replica NetBar
+    /// draws, the only place the hotspot detail it adds exists.
     @objc private func togglePanel() {
         if NSEvent.modifierFlags.contains(.option) {
-            openSystemWiFiMenu()
+            if panel?.isVisible == true {
+                panel?.dismiss()
+            } else {
+                showPanel()
+            }
             return
         }
-        if panel?.isVisible == true {
-            panel?.dismiss()
-        } else {
-            showPanel()
-        }
+        openSystemWiFiMenu()
     }
 
-    /// Hands the click to the system. The bridge waits on menus appearing, so it
-    /// runs off the main actor; a missing Accessibility grant sends the user to
-    /// the pane that fixes it.
+    /// Hands the click to the system. The bridge drives the menu through
+    /// Accessibility, so it runs off the main actor and never moves the pointer.
+    /// Without the grant there is nothing to open, so the panel explains that
+    /// rather than letting the click go nowhere.
     private func openSystemWiFiMenu() {
         panel?.dismiss()
-        Task.detached(priority: .userInitiated) {
+        Task.detached(priority: .userInitiated) { [weak self] in
             let outcome = NBSystemWiFiMenu.openSystemWiFiMenu()
             await MainActor.run {
+                guard let self else { return }
                 switch outcome {
                     case .opened:
                         break
                     case .notPermitted:
+                        // The prompt is the ask; the pane is where the answer lives
+                        // once the prompt has been dismissed for good.
                         _ = NBSystemWiFiMenu.requestPermission()
                         NBSystemWiFiMenu.openAccessibilitySettings()
+                        self.showPanel()
                     case .noMenuBarItem, .noWiFiControl:
-                        // The system menu is unreachable, so the settings pane is
-                        // the closest thing this app can still offer.
-                        NBWiFiBridge.openWiFiSettings()
+                        self.showPanel()
                     @unknown default:
                         break
                 }
@@ -186,6 +196,11 @@ final class MenuBarController: NSObject {
     private func showPanel() {
         let panel = panel ?? makePanel()
         self.panel = panel
+        // A grant can arrive while NetBar runs, and the panel carries a row for
+        // it, so the root view is rebuilt on every open rather than once.
+        hostingView?.rootView = AnyView(
+            MenuPanelView(store: store, systemMenuPermitted: NBSystemWiFiMenu.isPermitted())
+        )
         guard let button = statusItem?.button, let window = button.window else { return }
         button.highlight(true)
         panel.onDismiss = { [weak self] in
