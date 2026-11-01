@@ -29,10 +29,6 @@ struct MenuPanelView: View {
     /// change while NetBar runs. Defaulted so the snapshot renderer draws the
     /// panel without the permission row.
     var systemMenuPermitted: Bool = true
-    /// Whether macOS starts NetBar at login. Also refreshed on every open, because
-    /// the login item can be changed from System Settings while it is closed.
-    var launchAtLogin: Bool = false
-    var onToggleLaunchAtLogin: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -63,7 +59,6 @@ struct MenuPanelView: View {
                     AccessibilityPermission.openSettings()
                 }
             }
-            ToggleRow(title: "Launch at Login", isOn: launchAtLogin, action: onToggleLaunchAtLogin)
             if store.namesUnavailable {
                 // Only shown when macOS actually withheld the names; elsewhere
                 // the panel stays silent about privacy.
@@ -77,13 +72,6 @@ struct MenuPanelView: View {
                 SettingsLinkRow(title: "Wi-Fi Settings…") {
                     NBWiFiBridge.openWiFiSettings()
                 }
-            }
-            // An accessory app has no Dock tile and no menu bar menu, so without
-            // this row the only way out is Activity Monitor. Updating the app in
-            // place also leaves the old process running, and quitting is what makes
-            // the new bundle take effect.
-            SettingsLinkRow(title: "Quit NetBar") {
-                NSApp.terminate(nil)
             }
         }
         .padding(.vertical, MenuMetrics.innerPadding)
@@ -369,34 +357,6 @@ private struct OtherNetworksRow: View {
         .padding(.horizontal, MenuMetrics.innerPadding)
         .rowHover()
         .accessibilityLabel(isExpanded ? "Other Networks, expanded" : "Other Networks")
-    }
-}
-
-/// A row that reports a two-state setting and flips it when clicked.
-private struct ToggleRow: View {
-    let title: String
-    let isOn: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 13))
-                Spacer(minLength: 6)
-                if isOn {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-            }
-            .padding(.horizontal, MenuMetrics.textPadding)
-            .frame(height: MenuMetrics.rowHeight)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, MenuMetrics.innerPadding)
-        .rowHover()
-        .accessibilityLabel(isOn ? "\(title), on" : "\(title), off")
     }
 }
 

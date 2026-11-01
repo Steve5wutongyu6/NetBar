@@ -243,18 +243,9 @@ final class MenuBarController: NSObject {
         AnyView(
             MenuPanelView(
                 store: store,
-                systemMenuPermitted: AccessibilityPermission.isGranted,
-                launchAtLogin: LoginItem.isEnabled,
-                onToggleLaunchAtLogin: { [weak self] in self?.toggleLaunchAtLogin() }
+                systemMenuPermitted: AccessibilityPermission.isGranted
             )
         )
-    }
-
-    /// Flips launch at login, then re-reads it: macOS is the authority, and a build
-    /// directory cannot be registered at all.
-    private func toggleLaunchAtLogin() {
-        LoginItem.setEnabled(!LoginItem.isEnabled)
-        hostingView?.rootView = makePanelRoot()
     }
 
     /// Watches for the grant arriving while the panel is open, so the row goes away
