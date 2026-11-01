@@ -1,6 +1,6 @@
 cask "netbar" do
   version "1.0.7"
-  sha256 "d7a5dc3c439d01d6a1071dfb7b955edbd4ff8dad86d0f0cefa4f099e36440bc8"
+  sha256 "73bc248e5eb7dfa9fc72241ab241c5c5595e9dd70b91492a8c7f34613e0343c2"
 
   url "https://github.com/Steve5wutongyu6/NetBar/releases/download/v#{version}/NetBar-v#{version}.zip"
   name "NetBar"
