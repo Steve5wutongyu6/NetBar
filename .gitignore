@@ -13,3 +13,4 @@ NetBar.xcodeproj/project.xcworkspace/xcuserdata/
 *.log
 *.profraw
 hud-snapshots/
+/.idea/*
